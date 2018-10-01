@@ -27,6 +27,7 @@ for i=1:100:6000
      hold on;
 end
 
+
 % %% 2D plot of ALL spikes
 % 
 % figure(3);
@@ -34,53 +35,105 @@ end
 %      plot(spikes(i,:),'-')%'MarkerSize',8,'MarkerFaceColor','red');
 %      hold on;
 % end
+%% Scatter
+figure
+scatter(spikes(:,50),spikes(:,60));
 
-%% PCA analysis to define features
+%% Histograms
+figure('name','Features distributions')
+subplot(2,3,1)
+histogram(spikes(:,40))
+grid on
+xlabel('Amplitude','Fontsize',12,'Color','k')
+ylabel('Number of samples','Fontsize',12,'Color','k')
+title('40sec')
 
-[coeff,score,~,~,explained] = pca(spikes');
-spikesPCA = coeff(:,:);
+subplot(2,3,2)
+histogram(spikes(:,45))
+grid on
+xlabel('Amplitude','Fontsize',12,'Color','k')
+ylabel('Number of samples','Fontsize',12,'Color','k')
+title('45sec')
 
-%% plot 2 features of the spike
-
-figure('name','2 features of the spike')
-%scatter(score(sub_indexes,1),score(sub_indexes,2),10,'filled');
-
-%% Visualisation of histogram and boxplots of the three features 
-
-figure('name','Features distributions');
-
-subplot(2,3,1);
-histogram(spikesPCA(:,1));
+subplot(2,3,3)
+histogram(spikes(:,50))
+grid on
+xlabel('Amplitude','Fontsize',12,'Color','k');
 ylabel('Number of samples','Fontsize',12,'Color','k');
-title('Feature #1')
+title('50sec')
 
-subplot(2,3,2);
-histogram(spikesPCA(:,2));
-ylabel('Number of samples','Fontsize',12,'Color','k');
-title('Feature #2')
+subplot(2,3,4)
+histogram(spikes(:,55))
+grid on
+xlabel('Amplitude','Fontsize',12,'Color','k')
+ylabel('Number of samples','Fontsize',12,'Color','k')
+title('55sec')
 
-subplot(2,3,3);
-histogram(spikesPCA(:,3));
-ylabel('Number of samples','Fontsize',12,'Color','k');
-title('Feature #3')
+subplot(2,3,5)
+histogram(spikes(:,60))
+grid on
+xlabel('Amplitude','Fontsize',12,'Color','k')
+ylabel('Number of samples','Fontsize',12,'Color','k')
+title('60sec')
 
-subplot(2,3,4);
-boxplot(spikesPCA(:,1));
-grid on;
-ylabel('Number of samples','Fontsize',12,'Color','k');
+subplot(2,3,6)
+histogram(spikes(:,65))
+grid on
+xlabel('Amplitude','Fontsize',12,'Color','k')
+ylabel('Number of samples','Fontsize',12,'Color','k')
+title('65sec')
 
-subplot(2,3,5);
-boxplot(spikesPCA(:,2));
-grid on;
-ylabel('Number of samples','Fontsize',12,'Color','k');
+%% Boxplots
+figure('name','Features distributions')
+subplot(2,3,1)
+boxplot(spikes(:,40))
+grid on
+ylabel('Amplitude','Fontsize',12,'Color','k')
+title('40sec')
 
-subplot(2,3,6);
-boxplot(spikesPCA(:,3));
-grid on;
-ylabel('Number of samples','Fontsize',12,'Color','k');
+subplot(2,3,2)
+boxplot(spikes(:,45))
+grid on
+ylabel('Amplitude','Fontsize',12,'Color','k')
+title('45sec')
+
+subplot(2,3,3)
+boxplot(spikes(:,50))
+grid on
+ylabel('Amplitude','Fontsize',12,'Color','k')
+title('50sec')
+
+subplot(2,3,4)
+boxplot(spikes(:,55))
+grid on
+ylabel('Amplitude','Fontsize',12,'Color','k')
+title('55sec')
+
+subplot(2,3,5)
+boxplot(spikes(:,60))
+grid on
+ylabel('Amplitude','Fontsize',12,'Color','k')
+title('60sec')
+
+subplot(2,3,6)
+boxplot(spikes(:,65))
+grid on
+ylabel('Amplitude','Fontsize',12,'Color','k')
+title('65sec')
 
 %% plot matrix
-
 figure('name','PlotMatrix');
 plotmatrix(spikes(:,1:10:end))
+
+%% 3D visualization
+figure()
+scatter3(spikes(:,61),spikes(:,71),spikes(:,81))
+
+%% kmeans
+selectedFeatures = [61 71 81];
+idx=kmeans(spikes(:,selectedFeatures),3);
+figure
+gplotmatrix(spikes(:,selectedFeatures),idx);
+
+
 
