@@ -8,32 +8,68 @@ load('testSet.mat');
 load('trainLabels.mat');
 
 %% Division
-error = [];
-correct = [];
+classA = [];
+classB = [];
 
 for sample_ = 1:size(trainData,1)
     if trainLabels(sample_) == 0
-        correct = [correct; trainData(sample_, :)];
+        classA = [classA; trainData(sample_, :)];
     else
-        error = [error; trainData(sample_,:)];
+        classB = [classB; trainData(sample_,:)];
     end
 end
 
-figure('name','Random Correct');
-for i=1:10:456
-     plot(correct(i,:),'-')%'MarkerSize',8,'MarkerFaceColor','red');
-     hold on
-end
-title('Random')
-xlabel('Time [ms]','Fontsize',10,'Color','k');
-ylabel('Amplitude [\muV]','Fontsize',10,'Color','k');
 
-figure('name','Random Error');
-for i=1:10:141
-     plot(error(i,:),'-')%'MarkerSize',8,'MarkerFaceColor','red');
-     hold on
+%% Histogram
+figure('name','Features distribution')
+for subplotNumber = 1:10
+    subplot(2,5,subplotNumber)
+    histogram(classA(:,715+subplotNumber),[0:0.1:1])
+    hold on
+    histogram(classB(:,715+subplotNumber),[0:0.1:1])
+    xlabel('Amplitude [\muV]')
+    ylabel('Number of samples')
+    title(int2str(715+subplotNumber))
 end
-title('Random')
-xlabel('Time [ms]','Fontsize',10,'Color','k');
-ylabel('Amplitude [\muV]','Fontsize',10,'Color','k');
+
+figure('name','Features distribution')
+for subplotNumber = 1:10
+    subplot(2,5,subplotNumber)
+    boxplot(classA(:,715+subplotNumber))
+    hold on
+    boxplot(classB(:,715+subplotNumber))
+    title(int2str(715+subplotNumber))
+end
+%legend('classA','classB')
+
+%% Boxplot
+figure('name','2 Features')
+subplot(1,2,1)
+boxplot(classA(:,716))
+hold on
+boxplot(classB(:,716))
+title('Difference')
+subplot(1,2,2)
+boxplot(classA(:,723))
+hold on
+boxplot(classB(:,723))
+title('Similarity')
+
+
+%% Boxplot
+figure('name','2 Features')
+subplot(1,2,1)
+boxplot(classA(:,716),'Notch','on')
+hold on
+boxplot(classB(:,716),'Notch','on')
+title('Difference')
+subplot(1,2,2)
+boxplot(classA(:,723),'Notch','on')
+hold on
+boxplot(classB(:,723),'Notch','on')
+title('Similarity')
+
+
+
+
 
