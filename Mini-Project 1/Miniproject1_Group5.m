@@ -56,7 +56,7 @@ hold on
 boxplot(classB(:,featureDifferent))
 title('Difference')
 
-%% Boxplot
+%% Boxplot with notch
 figure('name','2 Features')
 subplot(1,2,1)
 boxplot(classA(:,featureSimilar),'Notch','on')
