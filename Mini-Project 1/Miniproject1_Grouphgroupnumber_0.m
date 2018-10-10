@@ -7,7 +7,7 @@ load('trainSet.mat');
 load('testSet.mat');
 load('trainLabels.mat');
 
-%% Division
+%% Division in classes
 classA = [];
 classB = [];
 
@@ -18,7 +18,6 @@ for sample_ = 1:size(trainData,1)
         classB = [classB; trainData(sample_,:)];
     end
 end
-
 
 %% Histogram
 figure('name','Features distribution')
@@ -40,35 +39,50 @@ for subplotNumber = 1:10
     boxplot(classB(:,715+subplotNumber))
     title(int2str(715+subplotNumber))
 end
-%legend('classA','classB')
+
+%% Boxplot
+featureDifferent = 716;
+featureSimilar = 723;
+
+figure('name','2 Features')
+subplot(1,2,1)
+boxplot(classA(:,featureSimilar))
+hold on
+boxplot(classB(:,featureSimilar))
+title('Similarity')
+subplot(1,2,2)
+boxplot(classA(:,featureDifferent))
+hold on
+boxplot(classB(:,featureDifferent))
+title('Difference')
 
 %% Boxplot
 figure('name','2 Features')
 subplot(1,2,1)
-boxplot(classA(:,716))
+boxplot(classA(:,featureSimilar),'Notch','on')
 hold on
-boxplot(classB(:,716))
-title('Difference')
-subplot(1,2,2)
-boxplot(classA(:,723))
-hold on
-boxplot(classB(:,723))
+boxplot(classB(:,featureSimilar),'Notch','on')
 title('Similarity')
-
-
-%% Boxplot
-figure('name','2 Features')
-subplot(1,2,1)
-boxplot(classA(:,716),'Notch','on')
-hold on
-boxplot(classB(:,716),'Notch','on')
-title('Difference')
 subplot(1,2,2)
-boxplot(classA(:,723),'Notch','on')
+boxplot(classA(:,featureDifferent),'Notch','on')
 hold on
-boxplot(classB(:,723),'Notch','on')
-title('Similarity')
+boxplot(classB(:,featureDifferent),'Notch','on')
+title('Difference')
 
+% when we visualize the 95%, in the similar case the two means cannot be
+% distinguished
+
+%% p-values
+[hSimilar, pSimilar] = ttest2(classA(:,featureSimilar),classB(:,featureSimilar));
+[hDifferent, pDifferent] = ttest2(classA(:,featureDifferent),classB(:,featureDifferent));
+
+% h = 0 for classA and classB with the similar feature, meaning that the
+% difference in value of this feature is not statistically relevant to
+% discriminate between one class and the other (high p value, order 10^-1)
+
+% h = 1 for classA and classB with the different feature, meaning that the
+% difference in value of this feature is statistically relevant to
+% discriminate between one class and the other (low p value, order 10^-9)
 
 
 
