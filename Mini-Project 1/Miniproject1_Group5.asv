@@ -87,8 +87,6 @@ title('Difference')
 
 
 %% Feature thresholding
-figure ('name', 'Scatterplot of feature 716')
-scatter (classA(:,716),classB(:,716))
-
+figure ('name', '
 
 
