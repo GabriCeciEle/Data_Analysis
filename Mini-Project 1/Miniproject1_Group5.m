@@ -87,8 +87,38 @@ title('Difference')
 
 
 %% Feature thresholding
-figure ('name', 'Scatterplot of feature 716')
-scatter (classA(:,716),classB(:,716))
+
+sampleVector = trainData(:,716);
+tf = 0.6*ones(size(trainData,1),1);
+labels = sampleVector > tf;
+correct = 0;
+for i = 1:size(trainData,1)
+    if(labels(i)==trainLabels(i))
+        correct = correct + 1
+    else
+    end
+end
+classificationAccuracy = correct/size(trainData,1);
+classificationError = 1 - classificationAccuracy;
+
+correctA = 0;
+for i = 1:size(classA,1)
+    if(labels(i)==trainLabels(i))
+        correctA = correctA + 1
+    else
+    end
+end
+
+correctB = 0;
+for i = size(classA,1)+1, size(trainData,1)
+    if(labels(i)==trainLabels(i))
+        correctB = correctB + 1
+    else
+    end
+end
+
+classError = 0.5*((size(classA,1)-correctA)/size(classA,1)) + 0.5*((size(classB,1)-correctB)/size(classB,1));
+
 
 
 
