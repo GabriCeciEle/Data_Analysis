@@ -72,9 +72,31 @@ title('Difference')
 % when we visualize the 95%, in the similar case the two means cannot be
 % distinguished
 
-%% p-values
-[hSimilar, pSimilar] = ttest2(classA(:,featureSimilar),classB(:,featureSimilar));
-[hDifferent, pDifferent] = ttest2(classA(:,featureDifferent),classB(:,featureDifferent));
+%% t-test
+% Checking if the populations are normal
+classA_featureDifferent_normalized = (classA(:,featureDifferent)- mean(classA(:,featureDifferent)))/std(classA(:,featureDifferent));
+classB_featureDifferent_normalized = (classB(:,featureDifferent)- mean(classB(:,featureDifferent)))/std(classB(:,featureDifferent));
+
+[hA,pA] = kstest(classA_featureDifferent_normalized);
+[hB,pB] = kstest(classB_featureDifferent_normalized);
+
+if hA==0 && hB==0
+    [hDifferent, pDifferent] = ttest2(classA(:,featureDifferent),classB(:,featureDifferent));
+else
+    Normality = ['One of the populations is not normal'];
+end
+
+classA_featureDifferent_normalized = (classA(:,featureDifferent)- mean(classA(:,featureDifferent)))/std(classA(:,featureDifferent));
+classB_featureDifferent_normalized = (classB(:,featureDifferent)- mean(classB(:,featureDifferent)))/std(classB(:,featureDifferent));
+
+[hA,pA] = kstest(classA_featureDifferent_normalized);
+[hB,pB] = kstest(classB_featureDifferent_normalized);
+
+if hA==0 && hB==0
+    [hSimilar, pSimilar] = ttest2(classA(:,featureSimilar),classB(:,featureSimilar));
+else
+    Normality = ['One of the populations is not normal'];
+end
 
 % h = 0 for classA and classB with the similar feature, meaning that the
 % difference in value of this feature is not statistically relevant to
@@ -84,11 +106,21 @@ title('Difference')
 % difference in value of this feature is statistically relevant to
 % discriminate between one class and the other (low p value, order 10^-9)
 
-
+% using t-test for everything is dangerous: not all the populations are
+% normal
 
 %% Feature thresholding
+figure('name','Scatterplot')
+scatter(trainData(:,featureDifferent), trainData(:,featureSimilar))
 
-sampleVector = trainData(:,716);
+figure()
+scatter(classA(:,featureDifferent), classA(:,featureSimilar),'r')
+hold on
+scatter(classB(:,featureDifferent), classB(:,featureSimilar),'b')
+hold on 
+line(ones(1,11)*0.6, 0:0.1:1)
+
+sampleVector = trainData(:,featureDifferent);
 tf = 0.6*ones(size(trainData,1),1);
 labels = sampleVector > tf;
 correct = 0;
@@ -104,7 +136,7 @@ classificationError = 1 - classificationAccuracy;
 correctA = 0;
 for i = 1:size(classA,1)
     if(labels(i)==trainLabels(i))
-        correctA = correctA + 1
+        correctA = correctA + 1;
     else
     end
 end
@@ -112,7 +144,7 @@ end
 correctB = 0;
 for i = size(classA,1)+1, size(trainData,1)
     if(labels(i)==trainLabels(i))
-        correctB = correctB + 1
+        correctB = correctB + 1;
     else
     end
 end
