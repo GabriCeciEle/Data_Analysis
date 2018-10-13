@@ -110,9 +110,6 @@ end
 % normal
 
 %% Feature thresholding
-figure('name','Scatterplot')
-scatter(trainData(:,featureDifferent), trainData(:,featureSimilar))
-
 figure()
 scatter(classA(:,featureDifferent), classA(:,featureSimilar),'r')
 hold on
@@ -126,8 +123,7 @@ labels = sampleVector > tf;
 correct = 0;
 for i = 1:size(trainData,1)
     if(labels(i)==trainLabels(i))
-        correct = correct + 1
-    else
+        correct = correct + 1;
     end
 end
 classificationAccuracy = correct/size(trainData,1);
@@ -137,20 +133,67 @@ correctA = 0;
 for i = 1:size(classA,1)
     if(labels(i)==trainLabels(i))
         correctA = correctA + 1;
-    else
     end
 end
 
 correctB = 0;
-for i = size(classA,1)+1, size(trainData,1)
+for i = size(classA,1)+1:size(trainData,1)
     if(labels(i)==trainLabels(i))
         correctB = correctB + 1;
-    else
     end
 end
 
 classError = 0.5*((size(classA,1)-correctA)/size(classA,1)) + 0.5*((size(classB,1)-correctB)/size(classB,1));
 
+%% Evolution of the errors depending on the threshold
 
+classificationAccuracy = [];
+classificationError = [];
+classError = [];
+threshold = 0:0.0001:1;
 
+sampleVector = trainData(:,featureDifferent);
+
+for tf_= threshold
+    tf = tf_*ones(size(trainData,1),1);
+    labels = sampleVector > tf_;
+    correct = 0;
+    for i = 1:size(trainData,1)
+        if(labels(i)==trainLabels(i))
+            correct = correct + 1;
+        end
+    end
+    classificationAccuracy = [classificationAccuracy; correct/size(trainData,1)];
+    classificationError = [classificationError; 1 - correct/size(trainData,1)];
+
+    correctA = 0;
+    correctB = 0;
+    for i = 1:size(classA,1)
+        if(labels(i)==trainLabels(i))
+            correctA = correctA + 1;
+        end
+    end
+    for i = size(classA,1)+1:size(trainData,1)
+        if(labels(i)==trainLabels(i))
+            correctB = correctB + 1;
+        end
+    end
+    classError = [classError; 0.5*((size(classA,1)-correctA)/size(classA,1)) + 0.5*((size(classB,1)-correctB)/size(classB,1))];
+end
+
+figure()
+plot(threshold,classificationAccuracy)
+title('classificationAccuracy')
+
+figure()
+plot(threshold,classificationError)
+title('classificationError')
+
+figure()
+plot(threshold,classError)
+title('classError')
+
+min(classError)
+% with o.5, 0.5 threshold 0.567
+% with 1/3, 2/3 threshold 0.4162
 
