@@ -202,4 +202,4 @@ min(classError)
 sampletestVector = testData(:,featureDifferent);
 thresholdTest = 0.567*ones(size(testData,1),1);
 labelsTest = sampletestVector > thresholdTest;
-
+labelToCSV(labelsTest,'labels.csv','csvlabels');
