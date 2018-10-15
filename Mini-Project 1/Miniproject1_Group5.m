@@ -7,6 +7,7 @@ load('trainSet.mat');
 load('testSet.mat');
 load('trainLabels.mat');
 
+%% %%%%%%%%%%%% GUIDESHEET I %%%%%%%%%%%%%%
 %% Division in classes
 classA = [];
 classB = [];
@@ -174,6 +175,8 @@ classError = 0.5*((size(classA,1)-correctA)/size(classA,1)) + 0.5*((size(classB,
 
 %% Evolution of the errors depending on the threshold
 
+featureDifferent = 711;
+
 classificationAccuracy = [];
 classificationError = [];
 classError = [];
@@ -205,7 +208,7 @@ for tf_= threshold
             correctB = correctB + 1;
         end
     end
-    classError = [classError; 0.2361*((size(classA,1)-correctA)/size(classA,1)) + 0.7639*((size(classB,1)-correctB)/size(classB,1))];
+    classError = [classError; 0.5*((size(classA,1)-correctA)/size(classA,1)) + 0.5*((size(classB,1)-correctB)/size(classB,1))];
 end
 
 figure()
@@ -231,6 +234,32 @@ min(classError)
 %% Test
 
 sampletestVector = testData(:,featureDifferent);
-thresholdTest = 0.4704*ones(size(testData,1),1);
+thresholdTest = 0.499*ones(size(testData,1),1);
 labelsTest = sampletestVector > thresholdTest;
 labelToCSV(labelsTest,'labels.csv','csvlabels');
+
+%% %%%%%%%%%%% GUIDESHEET II %%%%%%%%%%%%%%%%%%%
+%% 
+features = trainData(:,1:10:end);
+
+[classifierLinear, yhatLinear, errLinear] = classification(features, trainLabels, 'linear');
+[classifierDiaglinear, yhatDiaglinear, errDiaglinear] = classification(features, trainLabels, 'diaglinear');
+[classifierDiagquadratic, yhatDiagquadratic, errDiaquadratic] = classification(features, trainLabels, 'diagquadratic');
+[classifierQuadratic, yhatQuadratic, errQuadratic] = classification(features, trainLabels, 'pseudoquadratic');
+
+c = categorical({'Linear';'Diaglinear'; 'PseudoQuadratic'; 'Diagquadratic'});
+errors = [errLinear; errDiaglinear; errQuadratic; errDiaquadratic];
+
+figure()
+bar(c, errors)
+
+%%
+priorClassifier = fitcdiscr(features, trainLabels, 'discrimtype', 'pseudoquadratic', 'prior', 'uniform');
+classification_error = classificationError(trainLabels, predict(priorClassifier, features)); 
+
+
+
+
+
+
+
