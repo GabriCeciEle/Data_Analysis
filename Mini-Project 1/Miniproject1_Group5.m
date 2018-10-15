@@ -254,10 +254,42 @@ figure()
 bar(c, errors)
 
 %%
-priorClassifier = fitcdiscr(features, trainLabels, 'discrimtype', 'pseudoquadratic', 'prior', 'uniform');
-classification_error = classificationError(trainLabels, predict(priorClassifier, features)); 
+priorClassifier = fitcdiscr(features, trainLabels, 'discrimtype', 'pseudoquadratic', 'prior','uniform');
+yhat_prior = predict(priorClassifier, features);
+errQuadratic_prior = classificationError(trainLabels, yhat_prior); 
 
 
+%%  Class Error without prior proba
+%% Class Error with prior proba
+%% barpolt
+c = categorical({'ClassifError Quadratic';'Class Error Quadratic'; 'ClassifError Quadratic with prior'; 'Class Error Quadratic with prior'});
+Errors = [errQuadratic, CE, errQuadratic_prior, CE_prior];
+
+%% 
+trainingSet = zeros(298, 2048);
+testSet = zeros(298, 2048);
+
+mA=size(classA,1);
+mB=size(classB,1)-1;
+
+idxA = find(trainLabels==0);
+idxB = find(trainLabels==1);
+
+for i = 1:(mA/2)
+    trainingSet(i,:) = classA(i,:);
+end
+
+for j = 1:(mA/2)
+    testSet(j, :) = classA(((mA/2)+j),:);
+end
+    
+for i = 1:(mB/2)
+    trainingSet((mA/2)+i, :) = classB(i, :);
+end
+
+for j = 1:(mB/2)
+    testSet((mA/2)+j, :) = classB(((mB/2)+j),:);
+end
 
 
 
