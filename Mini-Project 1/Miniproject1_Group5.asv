@@ -41,7 +41,7 @@ for subplotNumber = 1:10
 end
 
 %% Boxplot
-featureDifferent = 716;
+featureDifferent = 1095;
 featureSimilar = 723;
 
 figure('name','2 Features')
@@ -86,11 +86,11 @@ else
     Normality = ['One of the populations is not normal'];
 end
 
-classA_featureDifferent_normalized = (classA(:,featureDifferent)- mean(classA(:,featureDifferent)))/std(classA(:,featureDifferent));
-classB_featureDifferent_normalized = (classB(:,featureDifferent)- mean(classB(:,featureDifferent)))/std(classB(:,featureDifferent));
+classA_featureSimilar_normalized = (classA(:,featureSimilar)- mean(classA(:,featureSimilar)))/std(classA(:,featureSimilar));
+classB_featureSimilar_normalized = (classB(:,featureSimilar)- mean(classB(:,featureSimilar)))/std(classB(:,featureSimilar));
 
-[hA,pA] = kstest(classA_featureDifferent_normalized);
-[hB,pB] = kstest(classB_featureDifferent_normalized);
+[hA,pA] = kstest(classA_featureSimilar_normalized);
+[hB,pB] = kstest(classB_featureSimilar_normalized);
 
 if hA==0 && hB==0
     [hSimilar, pSimilar] = ttest2(classA(:,featureSimilar),classB(:,featureSimilar));
@@ -109,7 +109,35 @@ end
 % using t-test for everything is dangerous: not all the populations are
 % normal
 
+%% Normality + t-test for all features
+pmin = 1;
+for i=1:size(trainData,2)
+    classA_normalized = (classA(:,i)- mean(classA(:,i)))/std(classA(:,i));
+    classB_normalized = (classB(:,i)- mean(classB(:,i)))/std(classB(:,i));
+
+    [hA,pA] = kstest(classA_normalized);
+    [hB,pB] = kstest(classB_normalized);
+
+    if hA==0 && hB==0
+        [h,p] = ttest2(classA(:,i),classB(:,i));
+        if p<pmin
+            pmin=p;
+            featureDifferent=i;
+        end
+    else
+        [p,h] = ranksum(classA(:,i),classB(:,i));
+        if p<pmin
+            pmin=p;
+            featureDifferent=i;
+        end
+    end
+    
+    
+end
+
+    
 %% Feature thresholding
+
 figure()
 scatter(classA(:,featureDifferent), classA(:,featureSimilar),'r')
 hold on
@@ -178,7 +206,7 @@ for tf_= threshold
             correctB = correctB + 1;
         end
     end
-    classError = [classError; 0.5*((size(classA,1)-correctA)/size(classA,1)) + 0.5*((size(classB,1)-correctB)/size(classB,1))];
+    classError = [classError; 0.5*((size(classA,1)-correctA)/size(classA,1)) + 0.*((size(classB,1)-correctB)/size(classB,1))];
 end
 
 figure()
@@ -193,9 +221,17 @@ figure()
 plot(threshold,classError)
 title('classError')
 
+figure()
+plot(threshold,classError.*classificationError)
+title('Product classError classificationError')
+
 min(classError)
 % with 0.5, 0.5 -> threshold 0.567
 % with 1/3, 2/3 -> threshold 0.4162
 
+%% Test
 
-
+sampletestVector = testData(:,featureDifferent);
+thresholdTest = 0.4704*ones(size(testData,1),1);
+labelsTest = sampletestVector > thresholdTest;
+labelToCSV(labelsTest,'labels.csv','csvlabels');
