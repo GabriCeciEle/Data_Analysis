@@ -343,13 +343,37 @@ legend('train', 'test');
 
 ErrorsArray_train1_test2 = ClassifErrors( set1, set2, set1_labels, set2_labels);
 
+name = categorical({'ClassifError diaglinear', 'ClassifError linear', 'ClassifError diagquadratic', 'ClassifError quadratic'});
+
+figure('name', 'Training error (set1) and Testing error (set 2) for 4 classifier')
+bar(name, ErrorsArray_train1_test2)
+legend('train', 'test');
+
 ErrorsArray_train2_test1 = ClassifErrors( set2, set1, set2_labels, set1_labels);
+
+figure('name', 'Training error (set2) and Testing error (set 1) for 4 classifier')
+bar(name, ErrorsArray_train2_test1)
+legend('train', 'test');
 
 %% using prior
 
+ErrorsArray_train1_test2_prior = ClassifErrors_prior(set1, set2, set1_labels, set2_labels);
+
+name = categorical({'ClassifError diaglinear', 'ClassifError linear', 'ClassifError diagquadratic', 'ClassifError quadratic'});
+
+figure('name', 'Training error (set1) and Testing error (set 2) for 4 classifier (prior)')
+bar(name, ErrorsArray_train1_test2_prior)
+legend('train', 'test');
+
+ErrorsArray_train2_test1_prior = ClassifErrors_prior(set2, set1, set2_labels, set1_labels);
+
+figure('name', 'Training error (set2) and Testing error (set 1) for 4 classifier (prior)')
+bar(name, ErrorsArray_train2_test1_prior)
+legend('train', 'test');
 % use classification_prior function
 
+%% Partition
 
-
-
-
+N = size(trainLabels, 1);
+cpN = cvpartition(N,'kfold',10);
+cpLabels = cvpartition(trainLabels,'kfold',10);
