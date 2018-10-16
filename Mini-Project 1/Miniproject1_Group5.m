@@ -11,12 +11,17 @@ load('trainLabels.mat');
 %% Division in classes
 classA = [];
 classB = [];
+labelsA = [];
+labelsB = [];
 
 for sample_ = 1:size(trainData,1)
     if trainLabels(sample_) == 0
         classA = [classA; trainData(sample_, :)];
+        labelsA = [labelsA; trainLabels(sample_)];
     else
-        classB = [classB; trainData(sample_,:)];
+        classB = [classB; trainData(sample_, :)];
+        labelsB = [labelsB; trainLabels(sample_)];
+
     end
 end
 
@@ -265,31 +270,84 @@ errQuadratic_prior = classificationError(trainLabels, yhat_prior);
 c = categorical({'ClassifError Quadratic';'Class Error Quadratic'; 'ClassifError Quadratic with prior'; 'Class Error Quadratic with prior'});
 Errors = [errQuadratic, CE, errQuadratic_prior, CE_prior];
 
-%% 
-trainingSet = zeros(298, 2048);
-testSet = zeros(298, 2048);
+%% split data
+set1 = zeros(298, 2048);
+set2 = zeros(298, 2048);
+set1_labels = zeros(298, 1);
+set2_labels = zeros(298, 1);
 
-mA=size(classA,1);
-mB=size(classB,1)-1;
+mA=size(classA, 1);
+mB=size(classB, 1);
 
-idxA = find(trainLabels==0);
-idxB = find(trainLabels==1);
 
 for i = 1:(mA/2)
-    trainingSet(i,:) = classA(i,:);
+    set1(i,:) = classA(i,:);
+    set1_labels(i, 1) = labelsA(i, 1);
 end
 
 for j = 1:(mA/2)
-    testSet(j, :) = classA(((mA/2)+j),:);
+    set2(j, :) = classA(((mA/2)+j),:);
+    set2_labels(i, 1) = labelsA(((mA/2)+j),:);
 end
     
 for i = 1:(mB/2)
-    trainingSet((mA/2)+i, :) = classB(i, :);
+    set1((mA/2)+i, :) = classB(i, :);
+    set1_labels((mA/2)+i, 1) = labelsB(i, 1);
+
 end
 
 for j = 1:(mB/2)
-    testSet((mA/2)+j, :) = classB(((mB/2)+j),:);
+    set2((mA/2)+j, :) = classB(((mB/2)+j),:);
+    set2_labels((mA/2)+j, 1) = labelsB(((mB/2)+j),:);
+
 end
+
+%% WITHOUT USING THE FUNCTION ClassifErrors
+% train a diaglinear classifier
+
+[classifierDiaglinear_train, yhatDiaglinear_train, errDiaglinear_train] = classification(trainingSet, trainingSet_labels, 'diaglinear');
+yhatDiaglinear_test = predict(classifierDiaglinear_train, testSet);
+errDiaglinear_test = classificationError(testSet_labels,yhatDiaglinear_test);
+
+% train a linear classifier
+
+[classifierLinear_train, yhatLinear_train, errLinear_train] = classification(trainingSet, trainingSet_labels, 'linear');
+yhatLinear_test = predict(classifierLinear_train, testSet);
+[errLinear_test] = classificationError(testSet_labels,yhatLinear_test);
+
+% train a diagquadratic classifier
+
+[classifierDiagquadratic_train, yhatDiagquadratic_train, errDiagquadratic_train] = classification(trainingSet, trainingSet_labels, 'diagquadratic');
+yhatDiagquadratic_test = predict(classifierDiagquadratic_train, testSet);
+[errDiagquadratic_test] = classificationError(testSet_labels,yhatDiagquadratic_test);
+
+% train a quadratic classifier
+
+[classifierQuadratic_train, yhatQuadratic_train, errQuadratic_train] = classification(trainingSet, trainingSet_labels, 'pseudoquadratic');
+yhatQuadratic_test = predict(classifierQuadratic_train, testSet);
+[errQuadratic_test] = classificationError(testSet_labels,yhatQuadratic_test);
+
+% barpolt
+
+%c = categorical({'ClassifError diaglinear train'; 'ClassifError diaglinear test'; 'ClassifError linear train'; 'ClassifError linear test'; 'ClassifError diagquadratic train'; 'ClassifError diagquadratic test'; 'ClassifError quadratic train'; 'ClassifError quadratic test'});
+name = categorical({'ClassifError diaglinear', 'ClassifError linear', 'ClassifError diagquadratic', 'ClassifError quadratic'});
+ClassifErrors = [errDiaglinear_train, errDiaglinear_test; 
+    errLinear_train, errLinear_test; 
+    errDiagquadratic_train, errDiagquadratic_test; 
+    errQuadratic_train, errQuadratic_test];
+figure('name', 'Training error (set1) and Testing error (set 2) for 4 classifier')
+bar(name, ClassifErrors)
+legend('train', 'test');
+
+%% USING THE FUNCTION ClassifErrors
+
+ErrorsArray_train1_test2 = ClassifErrors( set1, set2, set1_labels, set2_labels);
+
+ErrorsArray_train2_test1 = ClassifErrors( set2, set1, set2_labels, set1_labels);
+
+%% using prior
+
+% use classification_prior function
 
 
 
