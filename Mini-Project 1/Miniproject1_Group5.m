@@ -21,7 +21,6 @@ for sample_ = 1:size(trainData,1)
     else
         classB = [classB; trainData(sample_, :)];
         labelsB = [labelsB; trainLabels(sample_)];
-
     end
 end
 
@@ -237,111 +236,80 @@ min(classError)
 % with 1/3, 2/3 -> threshold 0.4162
 
 %% Test
-
 sampletestVector = testData(:,featureDifferent);
 thresholdTest = 0.499*ones(size(testData,1),1);
 labelsTest = sampletestVector > thresholdTest;
 labelToCSV(labelsTest,'labels.csv','csvlabels');
 
+%% Cleaning %%%%%%%%%%%%%%% line added for not having mismatches
+clearvars -except trainData trainLabels testData classA classB labelsA labelsB
+
 %% %%%%%%%%%%% GUIDESHEET II %%%%%%%%%%%%%%%%%%%
-%% 
-features = trainData(:,1:10:end);
+%% LDA/QDA classifiers
 
-[classifierLinear, yhatLinear, errLinear] = classification(features, trainLabels, 'linear');
-[classifierDiaglinear, yhatDiaglinear, errDiaglinear] = classification(features, trainLabels, 'diaglinear');
-[classifierDiagquadratic, yhatDiagquadratic, errDiaquadratic] = classification(features, trainLabels, 'diagquadratic');
-[classifierQuadratic, yhatQuadratic, errQuadratic] = classification(features, trainLabels, 'pseudoquadratic');
+% Linear, diaglinear, quadratic and diagquadratic classifiers
+testFeatures = trainData(:,1:10:end);
+testLabels = trainLabels(:,1:10:end);
 
-c = categorical({'Linear';'Diaglinear'; 'PseudoQuadratic'; 'Diagquadratic'});
+[~, ~, errLinear] = classification(testFeatures, testLabels, 'linear');
+[~, ~, errDiaglinear] = classification(testFeatures, testLabels, 'diaglinear');
+[~, ~, errDiaquadratic] = classification(testFeatures, testLabels, 'diagquadratic');
+[~, yhatQuadratic, errQuadratic] = classification(testFeatures, testLabels, 'pseudoquadratic');
+
+names = categorical({'Linear';'Diaglinear'; 'PseudoQuadratic'; 'Diagquadratic'});
 errors = [errLinear; errDiaglinear; errQuadratic; errDiaquadratic];
 
-figure()
-bar(c, errors)
+figure('name','Classification error')
+bar(names, errors)
+ylabel('Classification Error')
+title('Classification error depending on the classifier')
 
-%%
-priorClassifier = fitcdiscr(features, trainLabels, 'discrimtype', 'pseudoquadratic', 'prior','uniform');
-yhat_prior = predict(priorClassifier, features);
-errQuadratic_prior = classificationError(trainLabels, yhat_prior); 
+% Addition of the prior probability
+priorClassifier = fitcdiscr(testFeatures, testLabels, 'discrimtype', 'pseudoquadratic', 'prior','uniform');
+yhat_prior = predict(priorClassifier, testFeatures);
 
+classifiErrQuadratic_prior=classificationError(testLabels,yhat_prior); 
+classErrQuadratic = classError(testLabels,yhatQuadratic,0.5,0.5);
+classErrQuadratic_prior = classError(testLabels,yhat_prior,1/2,1/2);
 
-%%  Class Error without prior proba
-%% Class Error with prior proba
-%% barpolt
-c = categorical({'ClassifError Quadratic';'Class Error Quadratic'; 'ClassifError Quadratic with prior'; 'Class Error Quadratic with prior'});
-Errors = [errQuadratic, CE, errQuadratic_prior, CE_prior];
+names = categorical({'ClassifError Quadratic';'Class Error Quadratic'; 'ClassifError Quadratic with prior'; 'Class Error Quadratic with prior'});
+Errors = [errQuadratic, classErrQuadratic, classifiErrQuadratic_prior, classErrQuadratic_prior];
 
-%% split data
-set1 = zeros(298, 2048);
-set2 = zeros(298, 2048);
-set1_labels = zeros(298, 1);
-set2_labels = zeros(298, 1);
+figure('name','Class error')
+bar(names, Errors)
+ylabel('Error')
+title('Class and classification error')
 
+%% Training and testing error
+
+% Split data
 mA=size(classA, 1);
 mB=size(classB, 1);
 
+set1 = zeros(mA/2+(mB-1)/2, size(trainData,2));
+set2 = zeros(mA/2+(mB-1)/2, size(trainData,2));
+set1_labels = zeros(mA/2+(mB-1)/2, 1);
+set2_labels = zeros(mA/2+(mB-1)/2, 1);
 
 for i = 1:(mA/2)
     set1(i,:) = classA(i,:);
     set1_labels(i, 1) = labelsA(i, 1);
-end
-
-for j = 1:(mA/2)
-    set2(j, :) = classA(((mA/2)+j),:);
-    set2_labels(i, 1) = labelsA(((mA/2)+j),:);
-end
     
-for i = 1:(mB/2)
+    set2(i, :) = classA(((mA/2)+i),:);
+    set2_labels(i, 1) = labelsA(((mA/2)+i),:);
+end
+  
+for i = 1:((mB-1)/2)
     set1((mA/2)+i, :) = classB(i, :);
     set1_labels((mA/2)+i, 1) = labelsB(i, 1);
-
+    
+    set2((mA/2)+i, :) = classB(((mB-1)/2+i),:);
+    set2_labels((mA/2)+i, 1) = labelsB(((mB-1)/2+i),:);
 end
 
-for j = 1:(mB/2)
-    set2((mA/2)+j, :) = classB(((mB/2)+j),:);
-    set2_labels((mA/2)+j, 1) = labelsB(((mB/2)+j),:);
+% USING THE FUNCTION ClassifErrors
 
-end
-
-%% WITHOUT USING THE FUNCTION ClassifErrors
-% train a diaglinear classifier
-
-[classifierDiaglinear_train, yhatDiaglinear_train, errDiaglinear_train] = classification(trainingSet, trainingSet_labels, 'diaglinear');
-yhatDiaglinear_test = predict(classifierDiaglinear_train, testSet);
-errDiaglinear_test = classificationError(testSet_labels,yhatDiaglinear_test);
-
-% train a linear classifier
-
-[classifierLinear_train, yhatLinear_train, errLinear_train] = classification(trainingSet, trainingSet_labels, 'linear');
-yhatLinear_test = predict(classifierLinear_train, testSet);
-[errLinear_test] = classificationError(testSet_labels,yhatLinear_test);
-
-% train a diagquadratic classifier
-
-[classifierDiagquadratic_train, yhatDiagquadratic_train, errDiagquadratic_train] = classification(trainingSet, trainingSet_labels, 'diagquadratic');
-yhatDiagquadratic_test = predict(classifierDiagquadratic_train, testSet);
-[errDiagquadratic_test] = classificationError(testSet_labels,yhatDiagquadratic_test);
-
-% train a quadratic classifier
-
-[classifierQuadratic_train, yhatQuadratic_train, errQuadratic_train] = classification(trainingSet, trainingSet_labels, 'pseudoquadratic');
-yhatQuadratic_test = predict(classifierQuadratic_train, testSet);
-[errQuadratic_test] = classificationError(testSet_labels,yhatQuadratic_test);
-
-% barpolt
-
-%c = categorical({'ClassifError diaglinear train'; 'ClassifError diaglinear test'; 'ClassifError linear train'; 'ClassifError linear test'; 'ClassifError diagquadratic train'; 'ClassifError diagquadratic test'; 'ClassifError quadratic train'; 'ClassifError quadratic test'});
-name = categorical({'ClassifError diaglinear', 'ClassifError linear', 'ClassifError diagquadratic', 'ClassifError quadratic'});
-ClassifErrors = [errDiaglinear_train, errDiaglinear_test; 
-    errLinear_train, errLinear_test; 
-    errDiagquadratic_train, errDiagquadratic_test; 
-    errQuadratic_train, errQuadratic_test];
-figure('name', 'Training error (set1) and Testing error (set 2) for 4 classifier')
-bar(name, ClassifErrors)
-legend('train', 'test');
-
-%% USING THE FUNCTION ClassifErrors
-
-ErrorsArray_train1_test2 = ClassifErrors( set1, set2, set1_labels, set2_labels);
+ErrorsArray_train1_test2 = ClassifErrors(set1, set2, set1_labels, set2_labels);
 
 name = categorical({'ClassifError diaglinear', 'ClassifError linear', 'ClassifError diagquadratic', 'ClassifError quadratic'});
 
@@ -349,13 +317,13 @@ figure('name', 'Training error (set1) and Testing error (set 2) for 4 classifier
 bar(name, ErrorsArray_train1_test2)
 legend('train', 'test');
 
-ErrorsArray_train2_test1 = ClassifErrors( set2, set1, set2_labels, set1_labels);
+ErrorsArray_train2_test1 = ClassifErrors(set2, set1, set2_labels, set1_labels);
 
 figure('name', 'Training error (set2) and Testing error (set 1) for 4 classifier')
 bar(name, ErrorsArray_train2_test1)
 legend('train', 'test');
 
-%% using prior
+% using prior
 
 ErrorsArray_train1_test2_prior = ClassifErrors_prior(set1, set2, set1_labels, set2_labels);
 
@@ -372,7 +340,7 @@ bar(name, ErrorsArray_train2_test1_prior)
 legend('train', 'test');
 % use classification_prior function
 
-%% Partition
+% Partition
 
 N = size(trainLabels, 1);
 cpN = cvpartition(N,'kfold',10);
