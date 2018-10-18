@@ -1,27 +1,20 @@
-function [class_error] = classError(labels, predictedLabels, weightA, weightB)
-totA = 0;
-totB = 0;
-misclassifiedA = 0;
-misclassifiedB = 0;
+function [ err ] = classError( y,yhat )
+%CLASSERROR computes the class error for each class and averages it
+%   
+%   Input:
+%       y:      the labels
+%       yhat:   the output of the classifier
+%
+%   output:
+%       err:    the class-averaged classification error
+classes = unique(y);
+err_ = zeros(1,length(classes));
 
-for sample_ = 1:length(labels)
-    if labels(sample_) == 0
-        totA = totA+1;
-    else
-        totB = totB+1;
-    end
+for c=1:length(classes)
+    err_(c) = sum((y~=yhat) & (y == classes(c)))./sum(y==classes(c));
 end
 
-for sample_=1:length(labels)
-    if labels(sample_) == 0 && labels(sample_)~=predictedLabels(sample_)
-        misclassifiedA = misclassifiedA+1;
-    end
-    if labels(sample_) == 1 && labels(sample_)~=predictedLabels(sample_)
-        misclassifiedB = misclassifiedB+1;
-    end
-end
-
-class_error = weightA*(misclassifiedA/totA) + weightB*(misclassifiedB/totB);
+err = mean(err_);
 
 end
 

@@ -249,12 +249,11 @@ clearvars -except trainData trainLabels testData classA classB labelsA labelsB
 
 % Linear, diaglinear, quadratic and diagquadratic classifiers
 testFeatures = trainData(:,1:10:end);
-testLabels = trainLabels(:,1:10:end);
 
-[~, ~, errLinear] = classification(testFeatures, testLabels, 'linear');
-[~, ~, errDiaglinear] = classification(testFeatures, testLabels, 'diaglinear');
-[~, ~, errDiaquadratic] = classification(testFeatures, testLabels, 'diagquadratic');
-[~, yhatQuadratic, errQuadratic] = classification(testFeatures, testLabels, 'pseudoquadratic');
+[~, ~, errLinear] = classification(testFeatures, trainLabels, 'linear', 'empirical');
+[~, ~, errDiaglinear] = classification(testFeatures, trainLabels, 'diaglinear', 'empirical');
+[~, ~, errDiaquadratic] = classification(testFeatures, trainLabels, 'diagquadratic', 'empirical');
+[~, yhatQuadratic, errQuadratic] = classification(testFeatures, trainLabels, 'pseudoquadratic', 'empirical');
 
 names = categorical({'Linear';'Diaglinear'; 'PseudoQuadratic'; 'Diagquadratic'});
 errors = [errLinear; errDiaglinear; errQuadratic; errDiaquadratic];
@@ -265,12 +264,12 @@ ylabel('Classification Error')
 title('Classification error depending on the classifier')
 
 % Addition of the prior probability
-priorClassifier = fitcdiscr(testFeatures, testLabels, 'discrimtype', 'pseudoquadratic', 'prior','uniform');
+priorClassifier = fitcdiscr(testFeatures, trainLabels,'discrimtype', 'pseudoquadratic','prior','uniform');
 yhat_prior = predict(priorClassifier, testFeatures);
 
-classifiErrQuadratic_prior=classificationError(testLabels,yhat_prior); 
-classErrQuadratic = classError(testLabels,yhatQuadratic,0.5,0.5);
-classErrQuadratic_prior = classError(testLabels,yhat_prior,1/2,1/2);
+classifiErrQuadratic_prior=classificationError(trainLabels,yhat_prior); 
+classErrQuadratic = classError(trainLabels,yhatQuadratic);
+classErrQuadratic_prior = classError(trainLabels,yhat_prior);
 
 names = categorical({'ClassifError Quadratic';'Class Error Quadratic'; 'ClassifError Quadratic with prior'; 'Class Error Quadratic with prior'});
 Errors = [errQuadratic, classErrQuadratic, classifiErrQuadratic_prior, classErrQuadratic_prior];
@@ -307,41 +306,35 @@ for i = 1:((mB-1)/2)
     set2_labels((mA/2)+i, 1) = labelsB(((mB-1)/2+i),:);
 end
 
-% USING THE FUNCTION ClassifErrors
-
-ErrorsArray_train1_test2 = ClassifErrors(set1, set2, set1_labels, set2_labels);
+% evaluating errors
+[ErrorsArray_train1_test2, ErrorsArray_train1_test2_prior] = arrayErrorsClassification(set1, set2, set1_labels, set2_labels);
+[ErrorsArray_train2_test1, ErrorsArray_train2_test1_prior] = arrayErrorsClassification(set2, set1, set2_labels, set1_labels);
 
 name = categorical({'ClassifError diaglinear', 'ClassifError linear', 'ClassifError diagquadratic', 'ClassifError quadratic'});
 
-figure('name', 'Training error (set1) and Testing error (set 2) for 4 classifier')
+figure('name', 'Training error and Testing error for 4 classifier')
+subplot(2,2,1)
 bar(name, ErrorsArray_train1_test2)
+grid on
 legend('train', 'test');
-
-ErrorsArray_train2_test1 = ClassifErrors(set2, set1, set2_labels, set1_labels);
-
-figure('name', 'Training error (set2) and Testing error (set 1) for 4 classifier')
-bar(name, ErrorsArray_train2_test1)
-legend('train', 'test');
-
-% using prior
-
-ErrorsArray_train1_test2_prior = ClassifErrors_prior(set1, set2, set1_labels, set2_labels);
-
-name = categorical({'ClassifError diaglinear', 'ClassifError linear', 'ClassifError diagquadratic', 'ClassifError quadratic'});
-
-figure('name', 'Training error (set1) and Testing error (set 2) for 4 classifier (prior)')
+title('empirical, train=set1 and test=set2')
+subplot(2,2,2)
 bar(name, ErrorsArray_train1_test2_prior)
+grid on
 legend('train', 'test');
-
-ErrorsArray_train2_test1_prior = ClassifErrors_prior(set2, set1, set2_labels, set1_labels);
-
-figure('name', 'Training error (set2) and Testing error (set 1) for 4 classifier (prior)')
+title('prior, train=set1 and test=set2')
+subplot(2,2,3)
+bar(name, ErrorsArray_train2_test1)
+grid on
+legend('train', 'test');
+title('empirical, train=set2 and test=set1')
+subplot(2,2,4)
 bar(name, ErrorsArray_train2_test1_prior)
+grid on
 legend('train', 'test');
-% use classification_prior function
+title('prior, train=set2 and test=set1')
 
 % Partition
-
 N = size(trainLabels, 1);
 cpN = cvpartition(N,'kfold',10);
 cpLabels = cvpartition(trainLabels,'kfold',10);
