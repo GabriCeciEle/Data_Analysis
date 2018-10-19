@@ -303,32 +303,32 @@ for i = 1:((mB-1)/2)
 end
 
 % evaluating errors
-[ErrorsArray_train1_test2, ErrorsArray_train1_test2_prior] = arrayErrorsClassification(set1, set2, set1_labels, set2_labels);
-[ErrorsArray_train2_test1, ErrorsArray_train2_test1_prior] = arrayErrorsClassification(set2, set1, set2_labels, set1_labels);
+[ErrorsArray_train1_test2_empirical, ErrorsArray_train1_test2_uniform] = arrayErrorsClassification(set1, set2, set1_labels, set2_labels);
+[ErrorsArray_train2_test1_empirical, ErrorsArray_train2_test1_uniform] = arrayErrorsClassification(set2, set1, set2_labels, set1_labels);
 
 name = categorical({'ClassifError diaglinear', 'ClassifError linear', 'ClassifError diagquadratic', 'ClassifError quadratic'});
 
 figure('name', 'Training error and Testing error for 4 classifier')
 subplot(2,2,1)
-bar(name, ErrorsArray_train1_test2)
+bar(name, ErrorsArray_train1_test2_empirical)
 grid on
 legend('train', 'test');
-title('empirical, train=set1 and test=set2')
+title('empirical prior probability, train=set1 and test=set2')
 subplot(2,2,2)
-bar(name, ErrorsArray_train1_test2_prior)
+bar(name, ErrorsArray_train1_test2_uniform)
 grid on
 legend('train', 'test');
-title('prior, train=set1 and test=set2')
+title('uniform prior probability, train=set1 and test=set2')
 subplot(2,2,3)
-bar(name, ErrorsArray_train2_test1)
+bar(name, ErrorsArray_train2_test1_empirical)
 grid on
 legend('train', 'test');
-title('empirical, train=set2 and test=set1')
+title('empirical prior probability, train=set2 and test=set1')
 subplot(2,2,4)
-bar(name, ErrorsArray_train2_test1_prior)
+bar(name, ErrorsArray_train2_test1_uniform)
 grid on
 legend('train', 'test');
-title('prior, train=set2 and test=set1')
+title('uniform prior probability, train=set2 and test=set1')
 
 % Partition
 N = size(trainLabels, 1);
