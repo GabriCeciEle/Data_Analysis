@@ -264,8 +264,13 @@ ylabel('Classification Error')
 title('Classification error depending on the classifier')
 
 % Addition of the prior probability
-
-[priorClassifier,yhat_prior,classificErrQuadratic_prior,classErrQuadratic_prior] = classification(testFeatures,trainLabels,'pseudoquadratic','uniform');
+[priorClassifier,yhat_prior,classificErrQuadratic_prior,classErrQuadratic_prior] = classification(testFeatures,trainLabels,'pseudoquadratic','u
+% priorClassifier = fitcdiscr(testFeatures, trainLabels,'discrimtype', 'pseudoquadratic','Prior','uniform');
+% yhat_prior = predict(priorClassifier, testFeatures);
+% 
+% classificErrQuadratic_prior=classificationError(trainLabels,yhat_prior); 
+% classErrQuadratic = classError(trainLabels,yhatQuadratic);
+% classErrQuadratic_prior = classError(trainLabels,yhat_prior);
 
 names = categorical({'ClassifError Quadratic';'Class Error Quadratic'; 'ClassifError Quadratic with prior'; 'Class Error Quadratic with prior'});
 Errors = [classificErrQuadratic, classErrQuadratic, classificErrQuadratic_prior, classErrQuadratic_prior];

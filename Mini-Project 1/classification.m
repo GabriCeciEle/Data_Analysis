@@ -1,7 +1,8 @@
-function [classifier, yhat_train, err] = classification(dataset, labels, classifier_type, priortype)
+function [classifier, yhat_train, classificerr,classerr] = classification(dataset, labels, classifier_type, priortype)
 
 classifier= fitcdiscr(dataset, labels,'discrimtype', classifier_type,'prior', priortype);
 yhat_train = predict(classifier, dataset);
-err = classificationError(labels, yhat_train);
+classificerr = classificationError(labels, yhat_train);
+classerr = classError(labels,yhat_train);
 
 end

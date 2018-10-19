@@ -1,5 +1,5 @@
 function [ err ] = classError( y,yhat )
-%CLASSERROR computes the class error for each class and averages it
+% CLASSERROR computes the class error for each class and averages it
 %   
 %   Input:
 %       y:      the labels
