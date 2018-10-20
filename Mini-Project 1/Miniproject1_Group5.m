@@ -359,8 +359,64 @@ title('uniform prior probability, train=set2 and test=set1')
 yhat_kaggle = predict(classifierKaggle,testData(:,1:20:end));
 labelToCSV(yhat_kaggle,'labels_2.csv','csvlabels');
 
-% Partition
+%% Partition
 N = size(trainLabels, 1);
 cpN = cvpartition(N,'kfold',10);
 cpLabels = cvpartition(trainLabels,'kfold',10);
-%%hello girls and boys
+
+%%% check how many test sample in each partition
+for i=1:10
+    N=sum(trainLabels(cpN.test(i))==1)
+    L=sum(trainLabels(cpLabels.test(i))==1)
+ end
+%we have 14 sample from class B in test set of 59 to 60 samples 
+
+%% compute the error for the 4 classifier for 10-fold partition
+
+classification_error_matrix = zeros(8,10);
+
+for k=1:10
+    [ training_set, test_set, training_labels, test_labels ] = find_cvpartition(k, cpLabels, trainLabels, testFeatures);
+    [ErrorsArray_cptrain1_cptest2_empirical, ErrorsArray_cptrain1_cptest2_uniform] = arrayErrorsClassification(training_set, test_set, training_labels, test_labels);
+    for i=1:4
+        classification_error_matrix(i,k)=ErrorsArray_cptrain1_cptest2_empirical(i,2);
+    end
+    for j=1:4
+        classification_error_matrix(j+4,k)=ErrorsArray_cptrain1_cptest2_uniform(j,2);
+    end
+end
+
+mean_classification_error_matrix = mean(classification_error_matrix, 2);
+std_classification_error_matrix = std(classification_error_matrix, 0, 2);
+
+
+% changing the partition using repartition(cp) each time.
+classification_error_matrix_rep = zeros(8,10);
+
+cpLabels_repartition = repartition(cpLabels);
+
+for k=1:10
+    [ training_set_rep, test_set_rep, training_labels_rep, test_labels_rep ] = find_cvpartition(k, cpLabels_repartition, trainLabels, testFeatures);
+    [ErrorsArray_cp_rep_train1_cp_rep_test2_empirical, ErrorsArray_cp_rep_train1_cp_rep_test2_uniform] = arrayErrorsClassification(training_set_rep, test_set_rep, training_labels_rep, test_labels_rep);
+    for i=1:4
+        classification_error_matrix_rep(i,k)=ErrorsArray_cp_rep_train1_cp_rep_test2_empirical(i,2);
+    end
+    for j=1:4
+        classification_error_matrix_rep(j+4,k)=ErrorsArray_cp_rep_train1_cp_rep_test2_uniform(j,2);
+    end
+end
+
+mean_classification_error_matrix_rep = mean(classification_error_matrix_rep, 2);
+std_classification_error_matrix_rep = std(classification_error_matrix_rep, 0, 2);
+
+name = categorical({'ClassifError diaglinear emp', 'ClassifError linear emp', 'ClassifError diagquadratic emp', 'ClassifError quadratic emp', 'ClassifError diaglinear uni', 'ClassifError linear uni', 'ClassifError diagquadratic uni', 'ClassifError quadratic uni'});
+
+figure('name', 'Training error and Testing error for 4 classifiers and partitioning')
+subplot(1,2,1)
+bar(name, mean_classification_error_matrix)
+grid on
+title('Mean Classification error, 10-fold partition')
+subplot(1,2,2)
+bar(name, mean_classification_error_matrix_rep)
+grid on
+title('Mean Classification error, 10-fold partition and repartition')
