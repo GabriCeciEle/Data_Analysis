@@ -252,7 +252,7 @@ close all
 % Linear, diaglinear, quadratic and diagquadratic classifiers
 testFeatures = trainData(:,1:10:end);
 
-[~, ~, classificErrLinear,~] = classification(testFeatures, trainLabels, 'linear', 'empirical');
+[linclassifier, ~, classificErrLinear,~] = classification(testFeatures, trainLabels, 'linear', 'empirical');
 [~, ~, classificErrDiaglinear,~] = classification(testFeatures, trainLabels, 'diaglinear', 'empirical');
 [~, ~, classificErrDiaquadratic,~] = classification(testFeatures, trainLabels, 'diagquadratic', 'empirical');
 [quadclassifier, yhatQuadratic, classificErrQuadratic,classErrQuadratic] = classification(testFeatures, trainLabels, 'pseudoquadratic', 'empirical');
@@ -304,6 +304,28 @@ for i = 1:((mB-1)/2)
     set2_labels((mA/2)+i, 1) = labelsB(((mB-1)/2+i),:);
 end
 
+%n = round(1/3*size(classB, 1));
+%m = size(classB, 1)-n;
+
+%tot = size(classB,1)+size(classA,1);
+%tot = round(tot/2)-1; %%
+
+%set1 = zeros(tot,2048);
+%set2 = zeros(tot,2048);
+
+%set1 = classB(1:n,:);
+%set1_labels = labelsB(1:n);
+%set1(n+1:tot,:) = classA(1:(tot-n),:);
+%set1_labels(n+1:tot,:) = labelsA(1:(tot-n));
+
+%set2 = classB(n+1:end,:);
+%set2_labels = labelsB(n+1:end);
+%set2(m:tot,:) = classA(tot-n:(2*tot-n-m),:);
+%set2_labels(m:tot,:) = labelsA(tot-n:(2*tot-n-m));
+
+set1 = set1(:,1:20:end);
+set2 = set2(:,1:20:end);
+
 % evaluating errors
 [ErrorsArray_train1_test2_empirical, ErrorsArray_train1_test2_uniform] = arrayErrorsClassification(set1, set2, set1_labels, set2_labels);
 [ErrorsArray_train2_test1_empirical, ErrorsArray_train2_test1_uniform] = arrayErrorsClassification(set2, set1, set2_labels, set1_labels);
@@ -331,6 +353,11 @@ bar(name, ErrorsArray_train2_test1_uniform)
 grid on
 legend('train', 'test');
 title('uniform prior probability, train=set2 and test=set1')
+
+% kaeggle test
+[classifierKaggle, ~, ~,~]=classification(set2, set2_labels,'pseudoquadratic','uniform');
+yhat_kaggle = predict(classifierKaggle,testData(:,1:20:end));
+labelToCSV(yhat_kaggle,'labels_2.csv','csvlabels');
 
 % Partition
 N = size(trainLabels, 1);
