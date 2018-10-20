@@ -252,7 +252,7 @@ close all
 % Linear, diaglinear, quadratic and diagquadratic classifiers
 testFeatures = trainData(:,1:10:end);
 
-[~, ~, classificErrLinear,~] = classification(testFeatures, trainLabels, 'linear', 'empirical');
+[linclassifier, ~, classificErrLinear,~] = classification(testFeatures, trainLabels, 'linear', 'empirical');
 [~, ~, classificErrDiaglinear,~] = classification(testFeatures, trainLabels, 'diaglinear', 'empirical');
 [~, ~, classificErrDiaquadratic,~] = classification(testFeatures, trainLabels, 'diagquadratic', 'empirical');
 [quadclassifier, yhatQuadratic, classificErrQuadratic,classErrQuadratic] = classification(testFeatures, trainLabels, 'pseudoquadratic', 'empirical');
@@ -353,6 +353,11 @@ bar(name, ErrorsArray_train2_test1_uniform)
 grid on
 legend('train', 'test');
 title('uniform prior probability, train=set2 and test=set1')
+
+% kaeggle test
+[classifierKaggle, ~, ~,~]=classification(set2, set2_labels,'pseudoquadratic','uniform');
+yhat_kaggle = predict(classifierKaggle,testData(:,1:20:end));
+labelToCSV(yhat_kaggle,'labels_2.csv','csvlabels');
 
 % Partition
 N = size(trainLabels, 1);
