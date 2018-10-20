@@ -334,3 +334,4 @@ title('uniform prior probability, train=set2 and test=set1')
 N = size(trainLabels, 1);
 cpN = cvpartition(N,'kfold',10);
 cpLabels = cvpartition(trainLabels,'kfold',10);
+%%hello girls and boys
