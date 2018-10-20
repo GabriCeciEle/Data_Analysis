@@ -354,7 +354,7 @@ grid on
 legend('train', 'test');
 title('uniform prior probability, train=set2 and test=set1')
 
-% kaggle test
+% kaeggle test
 [classifierKaggle, ~, ~,~]=classification(set2, set2_labels,'pseudoquadratic','uniform');
 yhat_kaggle = predict(classifierKaggle,testData(:,1:20:end));
 labelToCSV(yhat_kaggle,'labels_2.csv','csvlabels');
