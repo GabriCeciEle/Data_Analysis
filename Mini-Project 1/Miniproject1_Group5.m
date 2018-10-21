@@ -414,9 +414,13 @@ name = categorical({'ClassifError diaglinear emp', 'ClassifError linear emp', 'C
 figure('name', 'Training error and Testing error for 4 classifiers and partitioning')
 subplot(1,2,1)
 bar(name, mean_classification_error_matrix)
+hold on
+errorbar(name,mean_classification_error_matrix,std_classification_error_matrix,'.')
 grid on
 title('Mean Classification error, 10-fold partition')
 subplot(1,2,2)
 bar(name, mean_classification_error_matrix_rep)
+hold on
+errorbar(name,mean_classification_error_matrix_rep,std_classification_error_matrix_rep,'.')
 grid on
 title('Mean Classification error, 10-fold partition and repartition')
