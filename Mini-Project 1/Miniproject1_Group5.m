@@ -433,4 +433,4 @@ grid on
 title('Mean Classification error, 10-fold partition and repartition')
 
 %% %%%%%%%Guidesheet III %%%%%%%%%%
-%%
+%% 
