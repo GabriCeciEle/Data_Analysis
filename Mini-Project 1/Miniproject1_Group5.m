@@ -17,6 +17,7 @@ labelsA = [];
 labelsB = [];
 
 for sample_ = 1:size(trainData,1)
+    
     if trainLabels(sample_) == 0
         classA = [classA; trainData(sample_, :)];
         labelsA = [labelsA; trainLabels(sample_)];
