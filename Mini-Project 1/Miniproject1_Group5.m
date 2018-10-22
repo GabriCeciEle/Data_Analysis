@@ -420,21 +420,13 @@ figure('name', 'Training error and Testing error for 4 classifiers and partition
 subplot(1,2,1)
 bar(name, mean_classification_error_matrix)
 hold on
-<<<<<<< HEAD
 errorbar(mean_classification_error_matrix,std_classification_error_matrix,'.')
-=======
-errorbar(name,mean_classification_error_matrix,std_classification_error_matrix,'.')
->>>>>>> 1e6499fd2083745079ec411e199fa6e58d0df53f
 grid on
 title('Mean Classification error, 10-fold partition')
 subplot(1,2,2)
 bar(name, mean_classification_error_matrix_rep)
 hold on
-<<<<<<< HEAD
 errorbar(mean_classification_error_matrix_rep,std_classification_error_matrix_rep,'.')
-=======
-errorbar(name,mean_classification_error_matrix_rep,std_classification_error_matrix_rep,'.')
->>>>>>> 1e6499fd2083745079ec411e199fa6e58d0df53f
 grid on
 title('Mean Classification error, 10-fold partition and repartition')
 
