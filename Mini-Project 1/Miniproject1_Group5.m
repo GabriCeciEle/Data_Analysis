@@ -434,4 +434,30 @@ grid on
 title('Mean Classification error, 10-fold partition and repartition')
 
 %% %%%%%%%Guidesheet III %%%%%%%%%%
-%% 
+
+orderedInd = [];
+orderedPower = [];
+
+classif_error_train_Diaglin = [];
+classif_error_test_Diaglin = [];
+classif_error_train_LDA = [];
+classif_error_test_LDA = [];
+
+
+for f=1:size(featureSel, 2);    
+    for k=1:10
+        [ training_set_fs, test_set_fs, training_labels_fs, test_labels_fs ] = ...
+            find_cvpartition(k, cpLabels, trainLabels, trainData);
+        [orderedInd, orderedPower] = rankfeat(training_set_fs, training_labels_fs, 'fisher');
+        [ErrorsArray_cp_fs_train1_cp_fs_test2_empirical, ~] = ...
+            arrayErrorsClassification(training_set_fs(:, orderedInd(1:f)), test_set_fs(:, orderedInd(1:f)), training_labels_fs, test_labels_fs);
+        
+        classif_error_train_Diaglin(f, k) = ErrorsArray_cp_fs_train1_cp_fs_test2_empirical(1,1);
+        classif_error_test_Diaglin(f, k) = ErrorsArray_cp_fs_train1_cp_fs_test2_empirical(1,2);
+        classif_error_train_LDA(f, k) = ErrorsArray_cp_fs_train1_cp_fs_test2_empirical(2,1);
+        classif_error_test_LDA(f, k) = ErrorsArray_cp_fs_train1_cp_fs_test2_empirical(2,2);
+    end
+end
+
+
+
