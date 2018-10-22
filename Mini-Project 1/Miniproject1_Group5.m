@@ -354,24 +354,26 @@ grid on
 legend('train', 'test');
 title('uniform prior probability, train=set2 and test=set1')
 
-% kaggle test
-[classifierKaggle, ~, ~,~]=classification(set2, set2_labels,'pseudoquadratic','uniform');
+%% Kaggle test
+[classifierKaggle, ~, ~,~]=classification(trainData(:,1:20:end),trainLabels,'pseudoquadratic','uniform');
 yhat_kaggle = predict(classifierKaggle,testData(:,1:20:end));
 labelToCSV(yhat_kaggle,'labels_2.csv','csvlabels');
 
 %% Partition
+
 N = size(trainLabels, 1);
 cpN = cvpartition(N,'kfold',10);
 cpLabels = cvpartition(trainLabels,'kfold',10);
+class_B_elem_N = [];
+class_B_elem_group = [];
 
-%%% check how many test sample in each partition
 for i=1:10
-    N=sum(trainLabels(cpN.test(i))==1)
-    L=sum(trainLabels(cpLabels.test(i))==1)
- end
-%we have 14 sample from class B in test set of 59 to 60 samples 
+    class_B_elem_N = [class_B_elem_N,sum(trainLabels(cpN.test(i))==1)];
+    class_B_elem_group = [class_B_elem_group,sum(trainLabels(cpLabels.test(i))==1)];
+end
+ 
 
-%% compute the error for the 4 classifier for 10-fold partition
+%% Compute the error for the 4 classifier for 10-fold partition
 
 classification_error_matrix = zeros(8,10);
 
