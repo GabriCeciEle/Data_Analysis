@@ -1,5 +1,18 @@
 function [ErrorsArray_empirical, ErrorsArray_uniform] = arrayErrorsClassification(trainingSet, testSet, trainingSet_labels, testSet_labels)
 
+% INPUT: training/test sets with their respective labels. 
+% OUTPUT: two matrices of errors, where the number of row corresponds to 
+% the model, and the number of column to the training/testing. Both are 
+% 4x2 errors referring to different models.
+% The first array uses an empirical prior probablity, while the
+% second uses a uniform prior probability.
+
+%                     TRAIN   |  TEST
+% diaglinear  -->    [        |     
+% linear      -->             |
+% diagquadratic-->            |
+% (pseudo)quadratic-->        |       ]
+
 % train a diaglinear classifier 'empirical'
 [classifierDiaglinear_train,  ~, errDiaglinear_train_e,~] = classification(trainingSet, trainingSet_labels, 'diaglinear', 'empirical');
 yhatDiaglinear_test = predict(classifierDiaglinear_train, testSet);
