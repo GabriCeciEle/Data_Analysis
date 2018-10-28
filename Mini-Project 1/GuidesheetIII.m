@@ -3,7 +3,7 @@ function [] = GuidesheetIII(trainData,trainLabels,testData)
 %% Cross-validation
 
 numMaxFolds = 10;
-numMaxFeatures = 300;
+numMaxFeatures = 20;
 
 orderedInd = [];
 orderedPower = [];
