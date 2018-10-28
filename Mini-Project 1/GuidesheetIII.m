@@ -3,7 +3,7 @@ function [] = GuidesheetIII(trainData,trainLabels,testData)
 %% Cross-validation
 
 numMaxFolds = 10;
-numMaxFeatures = 20;
+numMaxFeatures = 300;
 
 orderedInd = [];
 orderedPower = [];
@@ -119,5 +119,84 @@ grid on
 xlabel('Number of repetition');
 ylabel('Classification Error');
 title('Mean Test error random classifier');
+
+%% Nested cross-validation
+
+Inner = 5;
+Outer = 10;
+outerPartition = cvpartition(trainLabels,'kfold', Outer);
+    
+for k=1:Outer
+    [outer_training, outer_test, outer_training_labels, outer_test_labels] = ...
+        find_cvpartition(k,outerPartition,trainLabels,trainData);
+    
+    innerPartition = cvpartition(outer_training_labels,'kfold',Inner);
+    
+    for w=1:Inner
+        [inner_training, inner_test, inner_training_labels, inner_test_labels] = ...
+        find_cvpartition(w,innerPartition,outer_training_labels,outer_training);
+        [orderedInd, orderedPower] = rankfeat(inner_training, inner_training_labels, 'fisher');
+        
+        for f=1:numMaxFeatures
+            [InnerErrors_empirical, ~] = ...
+            arrayErrorsClassification(inner_training(:, orderedInd(1:f)), inner_test(:, orderedInd(1:f)), inner_training_labels, inner_test_labels);
+            classif_error_inner_train_diaglin(f,w) = InnerErrors_empirical(1,1);
+            classif_error_inner_validation_diaglin(f,w) = InnerErrors_empirical(1,2);
+            classif_error_inner_train_LDA(f,w) = InnerErrors_empirical(2,1);
+            classif_error_inner_validation_LDA(f,w) = InnerErrors_empirical(2,2);
+            classif_error_inner_train_diagquad(f,w) = InnerErrors_empirical(3,1);
+            classif_error_inner_validation_diagquad(f,w) = InnerErrors_empirical(3,2);
+            classif_error_inner_train_quad(f,w) = InnerErrors_empirical(4,1);
+            classif_error_inner_validation_quad(f,w) = InnerErrors_empirical(4,2);
+        end 
+    end
+    
+    
+    mean_Validation_error_diaglin = mean(classif_error_inner_validation_diaglin, 2);
+    mean_Train_error_diaglin = mean(classif_error_inner_train_diaglin,2);
+    mean_Validation_error_LDA = mean(classif_error_inner_validation_LDA, 2);
+    mean_Train_error_LDA = mean(classif_error_inner_train_LDA,2);
+    mean_Validation_error_diagquad = mean(classif_error_inner_validation_diagquad, 2);
+    mean_Train_error_diagquad = mean(classif_error_inner_train_diagquad,2);
+    mean_Validation_error_quad = mean(classif_error_inner_validation_quad, 2);
+    mean_Train_error_quad = mean(classif_error_inner_train_quad,2);
+        
+    % diaglin, LDA, diagquad, quad
+    [optimalValidationError(k,1),bestFeatureNumber(k,1)] = min(mean_Validation_error_diaglin);
+    [optimalValidationError(k,2),bestFeatureNumber(k,2)] = min(mean_Validation_error_LDA);
+    [optimalValidationError(k,3),bestFeatureNumber(k,3)] = min(mean_Validation_error_diagquad);
+    [optimalValidationError(k,4),bestFeatureNumber(k,4)] = min(mean_Validation_error_quad);
+    
+    [final_optimalValidationError(k,1),model(k,1)] = min(optimalValidationError(k,:));
+    bfn(k,1) = bestFeatureNumber(k,model(k,1));
+    
+    %optimalTrainingError(k,1) = meanTrain_error(bestFeatureNumber(k,1));
+    
+    [outer_orderedInd, outer_orderedPower] = rankfeat(outer_training, outer_training_labels, 'fisher');
+    [OuterErrors_empirical, ~] = ...
+    arrayErrorsClassification(outer_training(:,outer_orderedInd(1:bfn(k,1))), outer_test(:,outer_orderedInd(1:bfn(k,1))),outer_training_labels, outer_test_labels);
+    %classif_error_outer_train(1,k) = OuterErrors_empirical(2,1);
+    classif_error_outer_test(1,k) = OuterErrors_empirical(2,2); 
+   
+end
+
+figure('name','Nested cross validation errors')
+subplot(1,2,1)
+boxplot(classif_error_outer_test)
+title('Outer')
+subplot(1,2,2)
+boxplot(final_optimalValidationError)
+title('Validation')
+% subplot(1,3,3)
+% boxplot(optimalTrainingError)
+% title('Training')
+
+% figure()
+% subplot(1,2,1)
+% boxplot(classif_error_outer_test)
+% title('Outer NCV')
+% subplot(1,2,2)
+% boxplot(mean(classif_error_test_LDA,2))
+% title('cross validation')
 
 end
