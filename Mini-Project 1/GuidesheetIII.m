@@ -1,5 +1,7 @@
 function [] = GuidesheetIII(trainData,trainLabels,testData)
 
+%% Cross-validation
+
 numMaxFolds = 10;
 numMaxFeatures = 20;
 
@@ -87,5 +89,35 @@ legend('Train','Test')
 title('LDA classifier')
 
 
+
+
+%% Random classifier
+
+numMaxFolds = 4;
+classif_error_train_random = [];
+classif_error_test_random = [];
+mean_classif_error_test_random = [];
+cpLabels = cvpartition(trainLabels,'kfold', numMaxFolds);
+
+for i = 1:1000    
+    for k=1:numMaxFolds
+        [ training_set_fs, test_set_fs, training_labels_fs, test_labels_fs ] = ...
+            find_cvpartition(k, cpLabels, trainLabels, trainData);
+        N = length(training_labels_fs);
+        M = length(test_labels_fs);
+        predicted_labels_train_random = randi([0,1],N,1);
+        predicted_labels_test_random = randi([0,10],M,1);
+        classif_error_train_random(k) = classificationError(training_labels_fs,predicted_labels_train_random);
+        classif_error_test_random(k) = classificationError(test_labels_fs,predicted_labels_test_random);
+    end
+    mean_classif_error_test_random(i) = mean(classif_error_test_random);
 end
 
+figure('name','Test error across fold for random classifier')
+plot(mean_classif_error_test_random,'b');
+grid on
+xlabel('Number of repetition');
+ylabel('Classification Error');
+title('Mean Test error random classifier');
+
+end
