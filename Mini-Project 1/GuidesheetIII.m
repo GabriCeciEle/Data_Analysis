@@ -3,7 +3,7 @@ function [] = GuidesheetIII(trainData,trainLabels,testData)
 %% Cross-validation
 
 numMaxFolds = 10;
-numMaxFeatures = 20;
+numMaxFeatures = 200;
 
 orderedInd = [];
 orderedPower = [];
@@ -160,6 +160,9 @@ for k=1:Outer
     mean_Train_error_diagquad = mean(classif_error_inner_train_diagquad,2);
     mean_Validation_error_quad = mean(classif_error_inner_validation_quad, 2);
     mean_Train_error_quad = mean(classif_error_inner_train_quad,2);
+    
+    mean_Train_error = [mean_Train_error_diaglin,mean_Train_error_LDA,mean_Train_error_diagquad,mean_Train_error_quad];
+    
         
     % diaglin, LDA, diagquad, quad
     [optimalValidationError(k,1),bestFeatureNumber(k,1)] = min(mean_Validation_error_diaglin);
@@ -170,33 +173,93 @@ for k=1:Outer
     [final_optimalValidationError(k,1),model(k,1)] = min(optimalValidationError(k,:));
     bfn(k,1) = bestFeatureNumber(k,model(k,1));
     
-    %optimalTrainingError(k,1) = meanTrain_error(bestFeatureNumber(k,1));
+    optimalTrainingError(k,1) = mean_Train_error(bfn(k,1),model(k,1));
     
     [outer_orderedInd, outer_orderedPower] = rankfeat(outer_training, outer_training_labels, 'fisher');
     [OuterErrors_empirical, ~] = ...
     arrayErrorsClassification(outer_training(:,outer_orderedInd(1:bfn(k,1))), outer_test(:,outer_orderedInd(1:bfn(k,1))),outer_training_labels, outer_test_labels);
-    %classif_error_outer_train(1,k) = OuterErrors_empirical(2,1);
-    classif_error_outer_test(1,k) = OuterErrors_empirical(2,2); 
+    
+    classif_error_outer_test(k,1) = OuterErrors_empirical(model(k,1),2); 
    
 end
 
 figure('name','Nested cross validation errors')
-subplot(1,2,1)
+subplot(1,3,1)
 boxplot(classif_error_outer_test)
-title('Outer')
-subplot(1,2,2)
+title('Outer Errors')
+subplot(1,3,2)
 boxplot(final_optimalValidationError)
-title('Validation')
-% subplot(1,3,3)
-% boxplot(optimalTrainingError)
-% title('Training')
+title('Validation Inner Errors')
+subplot(1,3,3)
+boxplot(optimalTrainingError)
+title('Training Inner Errors')
 
-% figure()
-% subplot(1,2,1)
-% boxplot(classif_error_outer_test)
-% title('Outer NCV')
-% subplot(1,2,2)
-% boxplot(mean(classif_error_test_LDA,2))
-% title('cross validation')
+figure('name','error obtained with simple cross validation')
+subplot(1,2,1)
+boxplot(mean(classif_error_test_Diaglin,2))
+title('Diaglinear')
+subplot(1,2,2)
+boxplot(mean(classif_error_test_LDA,2))
+title('LDA')
+
+
+%% Cross validation for hyperparameters optimization
+
+numMaxFolds = 10;
+numMaxFeatures = 400;
+cpLabels = cvpartition(trainLabels,'kfold', numMaxFolds);
+classif_error_train_Diaglin = [];
+classif_error_test_Diaglin = [];
+classif_error_train_LDA = [];
+classif_error_test_LDA = [];
+classif_error_train_Diagquad = [];
+classif_error_test_Diagquad = [];
+classif_error_train_QDA = [];
+classif_error_test_QDA = [];
+for k=1:numMaxFolds    
+    for f=1:numMaxFeatures
+        [training_set_fs,test_set_fs,training_labels_fs,test_labels_fs] = ...
+            find_cvpartition(k, cpLabels, trainLabels, trainData);
+        [orderedInd, orderedPower] = rankfeat(training_set_fs, training_labels_fs, 'fisher');
+        [ErrorsArray,~] = ...
+            arrayErrorsClassification(training_set_fs(:, orderedInd(1:f)), test_set_fs(:, orderedInd(1:f)), training_labels_fs, test_labels_fs);
+        
+        classif_error_train_Diaglin(f, k) = ErrorsArray(1,1);
+        classif_error_test_Diaglin(f, k) = ErrorsArray(1,2);
+        classif_error_train_LDA(f, k) = ErrorsArray(2,1);
+        classif_error_test_LDA(f, k) = ErrorsArray(2,2);
+        classif_error_train_Diagquad(f, k) = ErrorsArray(3,1);
+        classif_error_test_Diagquad(f, k) = ErrorsArray(3,2);
+        classif_error_train_QDA(f, k) = ErrorsArray(4,1);
+        classif_error_test_QDA(f, k) = ErrorsArray(4,2);
+    end
+end
+
+TestErrorsCV = classif_error_test_Diaglin;
+TestErrorsCV(:,:,2) = classif_error_test_LDA;
+TestErrorsCV(:,:,3) = classif_error_test_Diagquad;
+TestErrorsCV(:,:,4) = classif_error_test_QDA;
+
+meanTestErrorsCV = mean(TestErrorsCV,2);
+
+min = 1;
+
+for f=1:size(meanTestErrorsCV,1)
+    for m=1:size(meanTestErrorsCV,3)
+        if meanTestErrorsCV(f,1,m)<= min
+            Results.bestFeatureNumber = f;
+            Results.classifierType = m;
+            min=meanTestErrorsCV(f,1,m);
+        end
+    end
+end
+
+%% Model building
+
+[orderedInd,orderedPower] = rankfeat(trainData, trainLabels, 'fisher');
+[classifierKaggle, ~, ~,~] = classification(trainData(:,orderedInd(1:Results.bestFeatureNumber)),trainLabels,'pseudoquadratic','empirical');
+yhat_kaggle = predict(classifierKaggle,testData(:,orderedInd(1:Results.bestFeatureNumber)));
+labelToCSV(yhat_kaggle,'labels_3.csv','csvlabels');
+
 
 end
