@@ -3,7 +3,7 @@ function [] = GuidesheetIII(trainData,trainLabels,testData)
 %% Cross-validation
 
 numMaxFolds = 10;
-numMaxFeatures = 200;
+numMaxFeatures = 400;
 
 orderedInd = [];
 orderedPower = [];
@@ -205,7 +205,7 @@ title('LDA')
 
 %% Cross validation for hyperparameters optimization
 
-numMaxFolds = 10;
+numMaxFolds = 20;
 numMaxFeatures = 400;
 cpLabels = cvpartition(trainLabels,'kfold', numMaxFolds);
 classif_error_train_Diaglin = [];
@@ -246,7 +246,7 @@ min = 1;
 
 for f=1:size(meanTestErrorsCV,1)
     for m=1:size(meanTestErrorsCV,3)
-        if meanTestErrorsCV(f,1,m)<= min
+        if meanTestErrorsCV(f,1,m)< min
             Results.bestFeatureNumber = f;
             Results.classifierType = m;
             min=meanTestErrorsCV(f,1,m);
@@ -260,6 +260,7 @@ end
 [classifierKaggle, ~, ~,~] = classification(trainData(:,orderedInd(1:Results.bestFeatureNumber)),trainLabels,'pseudoquadratic','empirical');
 yhat_kaggle = predict(classifierKaggle,testData(:,orderedInd(1:Results.bestFeatureNumber)));
 labelToCSV(yhat_kaggle,'labels_3.csv','csvlabels');
+
 
 
 end
