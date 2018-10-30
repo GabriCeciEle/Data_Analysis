@@ -15,7 +15,7 @@ GuidesheetII(trainData,trainLabels,testData, classA, classB, labelsA, labelsB);
 
 GuidesheetIII(trainData,trainLabels,testData);
 
-% GuidesheetIV();
+GuidesheetIV(trainData,trainLabels,testData);
 
 % GuidesheetV();
 
