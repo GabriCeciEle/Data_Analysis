@@ -71,7 +71,7 @@ ylabel('Loadings');
 %% Cross validation for hyperparameters optimization
 
 numMaxFolds = 20;
-numMaxPCs = 20;
+numMaxPCs = 100;
 cpLabels = cvpartition(trainLabels,'kfold', numMaxFolds);
 classif_error_train_Diaglin = [];
 classif_error_test_Diaglin = [];
@@ -81,31 +81,33 @@ classif_error_train_Diagquad = [];
 classif_error_test_Diagquad = [];
 classif_error_train_QDA = [];
 classif_error_test_QDA = [];
-for k=1:numMaxFolds    
-    for f=1:numMaxPCs
-        [training_set_fs,test_set_fs,training_labels_fs,test_labels_fs] = ...
-            find_cvpartition(k, cpLabels, trainLabels, trainData);
 
-        norm_train=zscore(training_set_fs);
+for k=1:numMaxFolds    
+    for p=1:numMaxPCs
+        [training_set,test_set,training_labels,test_labels] = ...
+        find_cvpartition(k, cpLabels, trainLabels, trainData);
+
+        norm_train = zscore(training_set);
         
-        [coeff,score,latent,tsquared,variance] = pca(norm_train(:, 1:50:2048));
+        [coeff,score,latent,tsquared,variance] = pca(norm_train(:,1:9:end));
         %[sorted_coef1, sorting_protocol1] = sort(abs(coeff(:,1)),'descend');        
         %cumul_variance = cumsum(variance)/sum(variance);
        
-        centered_test=zscore(testData(:, 1:50:2048));
-        norm_score_test=centered_test*coeff;
+        norm_test = (test_set(:,1:9:end) - mean(training_set(:,1:9:end),1))./std(training_set(:,1:9:end),0,1);
+        %centered_test=zscore(testData(:,1:50:2048));
+        norm_score_test = norm_test*coeff;
         
         [ErrorsArray,~] = ...
-            arrayErrorsClassification(score(:,1:numMaxPCs), norm_score_test(:,1:numMaxPCs), training_labels_fs, test_labels_fs);
+        arrayErrorsClassification(score(:,1:p), norm_score_test(:,1:p), training_labels, test_labels);
         
-        classif_error_train_Diaglin(f, k) = ErrorsArray(1,1);
-        classif_error_test_Diaglin(f, k) = ErrorsArray(1,2);
-        classif_error_train_LDA(f, k) = ErrorsArray(2,1);
-        classif_error_test_LDA(f, k) = ErrorsArray(2,2);
-        classif_error_train_Diagquad(f, k) = ErrorsArray(3,1);
-        classif_error_test_Diagquad(f, k) = ErrorsArray(3,2);
-        classif_error_train_QDA(f, k) = ErrorsArray(4,1);
-        classif_error_test_QDA(f, k) = ErrorsArray(4,2);
+        classif_error_train_Diaglin(p,k) = ErrorsArray(1,1);
+        classif_error_test_Diaglin(p,k) = ErrorsArray(1,2);
+        classif_error_train_LDA(p,k) = ErrorsArray(2,1);
+        classif_error_test_LDA(p,k) = ErrorsArray(2,2);
+        classif_error_train_Diagquad(p,k) = ErrorsArray(3,1);
+        classif_error_test_Diagquad(p,k) = ErrorsArray(3,2);
+        classif_error_train_QDA(p,k) = ErrorsArray(4,1);
+        classif_error_test_QDA(p,k) = ErrorsArray(4,2);
     end
 end
 
@@ -118,22 +120,16 @@ meanTestErrorsCV = mean(TestErrorsCV,2);
 
 min = 1;
 
-for f=1:size(meanTestErrorsCV,1)
+for p=1:size(meanTestErrorsCV,1)
     for m=1:size(meanTestErrorsCV,3)
-        if meanTestErrorsCV(f,1,m)< min
-            Results.bestPCsNumber = f;
+        if meanTestErrorsCV(p,1,m)< min
+            Results.bestPCsNumber = p;
             Results.classifierType = m;
-            min=meanTestErrorsCV(f,1,m);
+            min=meanTestErrorsCV(p,1,m);
         end
     end
 end
 
-%% Model building
-
-[orderedInd,orderedPower] = rankfeat(trainData, trainLabels, 'fisher');
-[classifierKaggle, ~, ~,~] = classification(trainData(:,orderedInd(1:Results.bestFeatureNumber)),trainLabels,'pseudoquadratic','empirical');
-yhat_kaggle = predict(classifierKaggle,testData(:,orderedInd(1:Results.bestFeatureNumber)));
-labelToCSV(yhat_kaggle,'labels_3.csv','csvlabels');
 
 end
 
