@@ -11,6 +11,8 @@ load('trainLabels.mat');
 
 [classA, classB, labelsA, labelsB] = GuidesheetI(trainData,trainLabels,testData);
 
+% Final
+
 GuidesheetII(trainData,trainLabels,testData, classA, classB, labelsA, labelsB);
 
 GuidesheetIII(trainData,trainLabels,testData);
@@ -18,4 +20,6 @@ GuidesheetIII(trainData,trainLabels,testData);
 GuidesheetIV(trainData,trainLabels,testData);
 
 % GuidesheetV();
+
+
 
