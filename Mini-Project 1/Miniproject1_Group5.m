@@ -7,11 +7,13 @@ load('trainSet.mat');
 load('testSet.mat');
 load('trainLabels.mat');
 
+%% Final 
+
+% Final
+
 %% Guidesheets 
 
 [classA, classB, labelsA, labelsB] = GuidesheetI(trainData,trainLabels,testData);
-
-% Final
 
 GuidesheetII(trainData,trainLabels,testData, classA, classB, labelsA, labelsB);
 

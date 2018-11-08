@@ -56,9 +56,8 @@ for k=1:Outer
     mean_Validation_error_quad = mean(class_error_test_QDA, 2);
     mean_Train_error_quad = mean(class_error_train_QDA,2);
      
-    mean_Train_error = [mean_Train_error_diaglin,mean_Train_error_LDA,mean_Train_error_diagquad,mean_Train_error_quad];
+    %mean_Train_error = [mean_Train_error_diaglin,mean_Train_error_LDA,mean_Train_error_diagquad,mean_Train_error_quad];
     
-    % diaglin, LDA, diagquad, quad
     [optimalValidationError(k,1),bestPcNumber(k,1)] = min(mean_Validation_error_diaglin);
     [optimalValidationError(k,2),bestPcNumber(k,2)] = min(mean_Validation_error_LDA);
     [optimalValidationError(k,3),bestPcNumber(k,3)] = min(mean_Validation_error_diagquad);
@@ -68,7 +67,7 @@ for k=1:Outer
     [final_optimalValidationError(k,1),model(k,1)] = min(optimalValidationError(k,:));
     bPcNumb(k,1) = bestPcNumber(k,model(k,1));
     
-    optimalTrainingError(k,1) = mean_Train_error(bPcNumb(k,1),model(k,1));
+    %optimalTrainingError(k,1) = mean_Train_error(bPcNumb(k,1),model(k,1));
     
     % model building for the outer fold
     norm_train = zscore(outer_training);       
@@ -81,28 +80,28 @@ for k=1:Outer
     OuterErrors = ...
          arrayErrorsClass(score(:,orderedInd(1:bPcNumb(k,1))), norm_score_test(:,orderedInd(1:bPcNumb(k,1))), outer_training_labels, outer_test_labels);
         
-    class_error_outer_test(k,1) = OuterErrors(model(k,1),2); 
+    Results.class_error_outer_test(k,1) = OuterErrors(model(k,1),2); 
    
 end
         
-mean_class_error_outer_test = mean(class_error_outer_test);
-std_class_error_outer_test = std(class_error_outer_test);
+Results.mean_class_error_outer_test = mean(Results.class_error_outer_test);
+Results.std_class_error_outer_test = std(Results.class_error_outer_test);
 
 figure('name', 'Performances')
 subplot(2,1,1)
-plot(class_error_outer_test)
+plot(Results.class_error_outer_test)
 grid on
 xlabel('Outer Fold')
 ylabel('Class Error')
 subplot(2,1,2)
-bar(mean_class_error_outer_test)
+bar(Results.mean_class_error_outer_test)
 hold on
-errorbar(mean_class_error_outer_test,std_class_error_outer_test,'.')
+errorbar(Results.mean_class_error_outer_test,Results.std_class_error_outer_test,'.')
 grid on
 title('Class error, 10-fold partition')
 
-
 %% CV for hyperparameters selection
+
 
 
 
