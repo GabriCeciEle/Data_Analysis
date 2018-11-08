@@ -18,17 +18,15 @@ for k=1:Outer
     for w=1:Inner
         [inner_training, inner_test, inner_training_labels, inner_test_labels] = ...
             find_cvpartition(w,innerPartition,outer_training_labels,outer_training);
-   
-        for p=1:numMaxPCs
+         
+        norm_train = zscore(inner_training);
+        [coeff,score,~,~,~] = pca(norm_train);
+        norm_test = (inner_test - mean(inner_training,1))./std(inner_training,0,1);
+        norm_score_test = norm_test*coeff;
 
-            norm_train = zscore(inner_training);
-        
-            [coeff,score,~,~,~] = pca(norm_train);
-       
-            norm_test = (inner_test - mean(inner_training,1))./std(inner_training,0,1);
-            norm_score_test = norm_test*coeff;
-            
-            [orderedInd, ~] = rankfeat(score, inner_training_labels, 'fisher');
+        [orderedInd, ~] = rankfeat(score, inner_training_labels, 'fisher');
+
+        for p=1:numMaxPCs
             
             ErrorsArray = ...
                 arrayErrorsClass(score(:,orderedInd(1:p)), norm_score_test(:,orderedInd(1:p)), inner_training_labels, inner_test_labels);
@@ -71,7 +69,6 @@ for k=1:Outer
     
     optimalTrainingError(k,1) = mean_Train_error(bPcNumb(k,1),model(k,1));
     
-   
     norm_train = zscore(outer_training);
         
     [coeff,score,~,~,~] = pca(norm_train);
