@@ -91,13 +91,10 @@ std_class_error_outer_test = std(class_error_outer_test);
 figure('name', 'Performances')
 subplot(2,1,1)
 plot(class_error_outer_test)
-grid on
-xlabel('Outer Fold')
-ylabel('Class Error')
 subplot(2,1,2)
 bar(mean_class_error_outer_test)
 hold on
-errorbar(mean_class_error_outer_test,std_class_error_outer_test,'.')
+errorbar(mean_classification_error_matrix,std_class_error_outer_test,'.')
 grid on
 title('Class error, 10-fold partition')
 
