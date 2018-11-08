@@ -1,17 +1,17 @@
 function [] = Final(trainData,trainLabels,testData)
 %% NCV
 
-Inner = 5; %5
-Outer = 10; %10
-numMaxPCs = 20;
+Inner = 5; 
+Outer = 10; 
+numMaxPCs = 50;
 
-trainData = trainData(:,1:20:end);
+trainData_NCV = trainData(:,1:20:end);
 
 outerPartition = cvpartition(trainLabels,'kfold', Outer);
     
 for k=1:Outer
     [outer_training, outer_test, outer_training_labels, outer_test_labels] = ...
-        find_cvpartition(k,outerPartition,trainLabels,trainData);
+        find_cvpartition(k,outerPartition,trainLabels,trainData_NCV);
     
     innerPartition = cvpartition(outer_training_labels,'kfold',Inner);
     
@@ -102,7 +102,56 @@ title('Class error, 10-fold partition')
 
 %% CV for hyperparameters selection
 
+numMaxFolds = 10; 
+numMaxPCs = 50;
 
+trainData_CV = trainData(:,1:20:end);
+
+cpLabels = cvpartition(trainLabels,'kfold', numMaxFolds);
+
+for k=1:numMaxFolds    
+    [training_set,test_set,training_labels,test_labels] = ...
+        find_cvpartition(k, cpLabels, trainLabels, trainData_CV);
+    
+    norm_train = zscore(training_set);  
+    [coeff,score,~,~,~] = pca(norm_train);
+    norm_test = (test_set - mean(training_set,1))./std(training_set,0,1);
+    norm_score_test = norm_test*coeff;
+    
+    [orderedInd, ~] = rankfeat(score, training_labels, 'fisher');
+    
+    for p=1:numMaxPCs
+        
+        ErrorsArray = ...
+        arrayErrorsClass(score(:,orderedInd(1:p)), norm_score_test(:,orderedInd(1:p)), training_labels, test_labels);
+        
+        class_error_train_Diaglin(p,k) = ErrorsArray(1,1);
+        class_error_test_Diaglin(p,k) = ErrorsArray(1,2);
+        class_error_train_LDA(p,k) = ErrorsArray(2,1);
+        class_error_test_LDA(p,k) = ErrorsArray(2,2);
+        class_error_train_Diagquad(p,k) = ErrorsArray(3,1);
+        class_error_test_Diagquad(p,k) = ErrorsArray(3,2);
+        class_error_train_QDA(p,k) = ErrorsArray(4,1);
+        class_error_test_QDA(p,k) = ErrorsArray(4,2);
+        
+    end
+end
+
+mean_Validation_error_diaglin = mean(class_error_test_Diaglin, 2);
+mean_Validation_error_LDA = mean(class_error_test_LDA, 2);
+mean_Validation_error_diagquad = mean(class_error_test_Diagquad, 2);
+mean_Validation_error_quad = mean(class_error_test_QDA, 2);
+
+[optimalValidationError_CV(1,1),bestPcNumber_CV(1,1)] = min(mean_Validation_error_diaglin);
+[optimalValidationError_CV(1,2),bestPcNumber_CV(1,2)] = min(mean_Validation_error_LDA);
+[optimalValidationError_CV(1,3),bestPcNumber_CV(1,3)] = min(mean_Validation_error_diagquad);
+[optimalValidationError_CV(1,4),bestPcNumber_CV(1,4)] = min(mean_Validation_error_quad);
+
+% find the best number of PCs and the best classifier type
+[Results.CV.final_optimalValidationError,Results.CV.model] = min(optimalValidationError_CV);
+Results.CV.bPcNumb = bestPcNumber_CV(1,Results.CV.model);
+
+%% Model building 
 
 
 end
