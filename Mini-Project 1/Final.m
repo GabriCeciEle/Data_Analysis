@@ -4,8 +4,9 @@ function [] = Final(trainData,trainLabels,testData)
 Inner = 5; 
 Outer = 10; 
 numMaxPCs = 100;
+step = 10; %first try was 20
 
-trainData_NCV = trainData(:,1:20:end);
+trainData_NCV = trainData(:,1:step:end);
 
 outerPartition = cvpartition(trainLabels,'kfold', Outer);
     
@@ -109,7 +110,7 @@ title('Class error, 10-fold partition')
 numMaxFolds = 10; 
 numMaxPCs = 100;
 
-trainData_CV = trainData(:,1:20:end);
+trainData_CV = trainData(:,1:step:end);
 
 cpLabels = cvpartition(trainLabels,'kfold', numMaxFolds);
 
@@ -161,5 +162,28 @@ Results.CV.bPcNumb = bestPcNumber_CV(1,Results.CV.model);
 
 %% Model building 
 
+if Results.CV.model == 1
+    classifiertype = 'diaglinear';
+elseif Results.CV.model == 2
+    classifiertype = 'linear';
+elseif Results.CV.model == 3
+    classifiertype = 'diagquadratic';
+elseif Result.CV.model == 4
+    classifiertype = 'pseudoquadratic';
+end
+
+trainData = trainData(:,1:step:end);   
+final_norm_train = zscore(trainData);  
+[coeff,score,~,~,~] = pca(final_norm_train);
+final_norm_test = (testData(:,1:step:end) - mean(trainData,1))./std(trainData,0,1);
+final_norm_score_test = final_norm_test*coeff;
+
+[orderedInd, ~] = rankfeat(score, trainLabels, 'fisher');
+
+%[classifierKaggle, ~, ~,~] = classification(score(:,1:10),trainLabels,'linear','uniform');
+%[classifierKaggle, ~, ~,~] = classification(score(:,orderedInd(1:10)),trainLabels,'linear','uniform');
+[classifierKaggle, ~, ~,~] = classification(score(:,orderedInd(1:Results.CV.bPcNumb)),trainLabels,classifiertype,'uniform');
+yhat_kaggle = predict(classifierKaggle,final_norm_score_test(:,orderedInd(1:Results.CV.bPcNumb)));
+labelToCSV(yhat_kaggle,'labels_final.csv','csvlabels');
 
 end
