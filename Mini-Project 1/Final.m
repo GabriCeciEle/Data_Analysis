@@ -100,6 +100,10 @@ errorbar(Results.NCV.mean_class_error_outer_test,Results.NCV.std_class_error_out
 grid on
 title('Class error, 10-fold partition')
 
+%% Statistical significance
+
+[h,p] = ttest(Results.NCV.class_error_outer_test,0.5);
+
 %% CV for hyperparameters selection
 
 numMaxFolds = 10; 
