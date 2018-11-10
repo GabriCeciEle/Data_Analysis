@@ -2,11 +2,11 @@ function [] = Final(trainData,trainLabels,testData)
 %% NCV
 
 Inner = 5; 
-Outer = 5; 
+Outer = 10; 
 numMaxPCs = 100;
 stp = 10; %first try was 20
 
-trainData_NCV = trainData(:,1:stp:end);
+trainData_NCV = trainData(:,2:stp:end);
 
 outerPartition = cvpartition(trainLabels,'kfold', Outer);
     
