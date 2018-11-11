@@ -4,10 +4,12 @@ function [] = Final(trainData,trainLabels,testData)
 Inner = 5; 
 Outer = 10; 
 numMaxPCs = 20; 
-stp = 10; %first try was 20
+stp = 10; 
 
-trainData_NCV = trainData(:,1:stp:end);
+trainData_NCV = trainData(:,700:stp:2000);
 
+%t=rng;
+rng(t);
 outerPartition = cvpartition(trainLabels,'kfold', Outer);
     
 for k=1:Outer
@@ -109,18 +111,18 @@ title('Class error, 10-fold partition')
 
 numMaxFolds = 5; 
 numMaxPCs = 20;
-stp = 20;
+stp = 10;
 
-load('s.mat');
+%load('s.mat'); %for the random division
 
-%trainData_CV = trainData(:,1:stp:end);
-trainData_CV = trainData(:,700:720);
-rng(s);
+trainData_CV = trainData(:,700:stp:2000);
+q = rng;
+
 
 cpLabels = cvpartition(trainLabels,'kfold', numMaxFolds);
 
-cumul_variance_one = [];
-cumul_variance = [];
+cumul_variance_onlyPCA = [];
+cumul_variance_PCAandFisher = [];
 
 for k=1:numMaxFolds    
     [training_set,test_set,training_labels,test_labels] = ...
@@ -131,11 +133,11 @@ for k=1:numMaxFolds
     norm_test = (test_set - mean(training_set,1))./std(training_set,0,1);
     norm_score_test = norm_test*coeff;
     
-    cumul_variance_one = [cumul_variance_one,cumsum(variance)/sum(variance)];
+    cumul_variance_onlyPCA = [cumul_variance_onlyPCA,cumsum(variance)/sum(variance)];
     
     [orderedInd, ~] = rankfeat(score, training_labels, 'fisher');
     
-    cumul_variance = [cumul_variance,cumsum(variance(orderedInd(1:end)))/sum(variance(orderedInd(1:end)))];
+    cumul_variance_PCAandFisher = [cumul_variance_PCAandFisher,cumsum(variance(orderedInd(1:end)))/sum(variance(orderedInd(1:end)))];
     
     for p=1:numMaxPCs
         
@@ -187,31 +189,36 @@ std_train_error_QDA = std(class_error_train_QDA,0, 2);
 [Results.CV.final_optimalValidationError,Results.CV.model] = min(optimalValidationError_CV);
 Results.CV.bPcNumb = bestPcNumber_CV(1,Results.CV.model);
 
+%% CV for hyperparameters selection Plots
 
-mean_variance_one = mean(cumul_variance_one,2);
-std_variance_one =std(cumul_variance_one,0,2);
+% Cumulative variance
+mean_variance_onlyPCA = mean(cumul_variance_onlyPCA,2);
+std_variance_onlyPCA =std(cumul_variance_onlyPCA,0,2);
 
-mean_variance = mean(cumul_variance,2);
-std_variance =std(cumul_variance,0,2);
+mean_variance_PCAandFisher = mean(cumul_variance_PCAandFisher,2);
+std_variance_PCAandFisher =std(cumul_variance_PCAandFisher,0,2);
 
-
-figure()
-bar(mean_variance_one)
+figure('name','Cumulated Explained Variance')
+bar(mean_variance_onlyPCA)
 hold on
-errorbar(mean_variance_one,std_variance_one,'.')
+bar(mean_variance_PCAandFisher)
 hold on
-bar(mean_variance)
+errorbar(mean_variance_onlyPCA,std_variance_onlyPCA,'.','linewidth',2)
 hold on
-errorbar(mean_variance,std_variance,'.')
+errorbar(mean_variance_PCAandFisher,std_variance_PCAandFisher,'.','linewidth',2)
 hold on
 plot([1:21],ones(1,21)*0.9,'linewidth',2)
 grid on
 title({'Cumulated explained variance in';'function of the principal components'})
-legend('PCA','PCA+Fisher')
-xlabel('Number of principal components')
-ylabel('Cumulated explained variance (%)')
+ax=gca;
+ax.TitleFontSizeMultiplier=2;
+al=legend('PCA','PCA+Fisher')
+al.FontSize=18;
+xlabel('#PCs','fontsize',18)
+ylabel('Cumulated Explained Variance (%)','fontsize',18)
 
 
+% Validation and Training Error
 figure('name','Validation error and Training error Diaglinear')
 errorbar(mean_Validation_error_Diaglin,std_Validation_error_Diaglin, 'linewidth',2)
 hold on 
@@ -276,19 +283,42 @@ elseif Results.CV.model == 4
     classifiertype = 'pseudoquadratic';
 end
 
-stp=200;
-trainData = trainData(:,1:200:end);   
-final_norm_train = zscore(trainData);  
+trainData_final = trainData(:,700:stp:2000);   
+final_norm_train = zscore(trainData_final);  
 [coeff,score,~,~,~] = pca(final_norm_train);
-final_norm_test = (testData(:,1:stp:end) - mean(trainData,1))./std(trainData,0,1);
+final_norm_test = (testData(:,700:stp:2000) - mean(trainData_final,1))./std(trainData_final,0,1);
 final_norm_score_test = final_norm_test*coeff;
 
 [orderedInd, ~] = rankfeat(score, trainLabels, 'fisher');
 
-%Results.CV.bPcNumb = 20;
-%classifiertype = 'linear';
 [classifierKaggle, ~, ~,~] = classification(score(:,orderedInd(1:Results.CV.bPcNumb)),trainLabels,classifiertype,'uniform');
 yhat_kaggle = predict(classifierKaggle,final_norm_score_test(:,orderedInd(1:Results.CV.bPcNumb)));
 labelToCSV(yhat_kaggle,'labels_final.csv','csvlabels');
+
+% Covariance matrix Plot
+cov_matrix_beforePCA = cov(zscore(trainData));
+cov_matrix_PCA = cov(score);
+
+figure
+subplot(1,2,1);
+imagesc(cov_matrix_beforePCA,[0,1])
+xlabel('Feature','fontsize',18)
+ylabel('Feature','fontsize',18)
+colormap(gray)
+colorbar
+title('Before PCA')
+ax=gca;
+ax.TitleFontSizeMultiplier=2;
+
+subplot(1,2,2);
+imagesc(cov_matrix_PCA,[0,1])
+xlabel('PC','fontsize',18)
+ylabel('PC','fontsize',18)
+colormap(gray)
+colorbar
+title('After PCA')
+ax=gca;
+ax.TitleFontSizeMultiplier=2;
+
 
 end

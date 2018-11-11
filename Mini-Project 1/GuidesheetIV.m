@@ -3,8 +3,8 @@ function [] = GuidesheetIV(trainData,trainLabels,testData)
 [orderedInd, orderedPower] = rankfeat(trainData, trainLabels, 'fisher');
 
 %standardized (z-score) data
-%norm_data = zscore(trainData);
-[coeff,score,latent,tsquared,variance] = pca(trainData(:, orderedInd(1:20)));
+norm_data = zscore(trainData);
+[coeff,score,latent,tsquared,variance] = pca(norm_data(:, orderedInd(1:20)));
 
 %% covariance matrix
 
