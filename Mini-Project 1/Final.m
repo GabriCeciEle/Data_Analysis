@@ -1,15 +1,19 @@
 function [] = Final(trainData,trainLabels,testData)
-%% NCV
-
-Inner = 5; 
-Outer = 10; 
+%% Parameters setting
+Inner = 5; %NCV
+Outer = 10; %NCV
+numMaxFolds = 10; %CV
 numMaxPCs = 20; 
-stp = 10; 
+stp=10;
 
 trainData_NCV = trainData(:,700:stp:2000);
+trainData_CV = trainData(:,700:stp:2000);
 
-%t=rng;
-rng(t);
+load('s.mat')
+
+%% NCV
+
+rng(s);
 outerPartition = cvpartition(trainLabels,'kfold', Outer);
     
 for k=1:Outer
@@ -59,8 +63,6 @@ for k=1:Outer
     Results.NCV.mean_Validation_error_quad = mean(Results.NCV.class_error_test_QDA, 2);
     Results.NCV.mean_Train_error_quad = mean(Results.NCV.class_error_train_QDA,2);
     
-    %mean_Train_error = [mean_Train_error_diaglin,mean_Train_error_LDA,mean_Train_error_diagquad,mean_Train_error_quad];
-    
     [Results.NCV.optimalValidationError(k,1),Results.NCV.bestPcNumber(k,1)] = min(Results.NCV.mean_Validation_error_diaglin);
     [Results.NCV.optimalValidationError(k,2),Results.NCV.bestPcNumber(k,2)] = min(Results.NCV.mean_Validation_error_LDA);
     [Results.NCV.optimalValidationError(k,3),Results.NCV.bestPcNumber(k,3)] = min(Results.NCV.mean_Validation_error_diagquad);
@@ -69,8 +71,6 @@ for k=1:Outer
     % find the best number of PCs and the best classifier type
     [Results.NCV.final_optimalValidationError(k,1),Results.NCV.model(k,1)] = min(Results.NCV.optimalValidationError(k,:));
     Results.NCV.bPcNumb(k,1) = Results.NCV.bestPcNumber(k,Results.NCV.model(k,1));
-    
-    %optimalTrainingError(k,1) = mean_Train_error(bPcNumb(k,1),model(k,1));
     
     % model building for the outer fold
     norm_train = zscore(outer_training);       
@@ -90,18 +90,22 @@ end
 Results.NCV.mean_class_error_outer_test = mean(Results.NCV.class_error_outer_test);
 Results.NCV.std_class_error_outer_test = std(Results.NCV.class_error_outer_test);
 
-figure('name', 'Performances')
-subplot(2,1,1)
+figure('name', 'Performances on Outer Folds')
 plot(Results.NCV.class_error_outer_test)
 grid on
 xlabel('Outer Fold')
 ylabel('Class Error')
-subplot(2,1,2)
+
+figure('name', 'Performances')
 bar(Results.NCV.mean_class_error_outer_test)
 hold on
-errorbar(Results.NCV.mean_class_error_outer_test,Results.NCV.std_class_error_outer_test,'.')
+errorbar(Results.NCV.mean_class_error_outer_test,Results.NCV.std_class_error_outer_test,'.','linewidth',2)
 grid on
-title('Class error, 10-fold partition')
+title('Class error on the Validation Set')
+ax=gca;
+ax.TitleFontSizeMultiplier=2;
+ylabel('Class error','fontsize',18)
+xlabel('')
 
 %% Statistical significance
 
@@ -109,16 +113,7 @@ title('Class error, 10-fold partition')
 
 %% CV for hyperparameters selection
 
-numMaxFolds = 5; 
-numMaxPCs = 20;
-stp = 10;
-
-%load('s.mat'); %for the random division
-
-trainData_CV = trainData(:,700:stp:2000);
-q = rng;
-
-
+rng(s);
 cpLabels = cvpartition(trainLabels,'kfold', numMaxFolds);
 
 cumul_variance_onlyPCA = [];
@@ -199,16 +194,17 @@ mean_variance_PCAandFisher = mean(cumul_variance_PCAandFisher,2);
 std_variance_PCAandFisher =std(cumul_variance_PCAandFisher,0,2);
 
 figure('name','Cumulated Explained Variance')
-bar(mean_variance_onlyPCA)
+bar(mean_variance_onlyPCA*100)
 hold on
-bar(mean_variance_PCAandFisher)
+bar(mean_variance_PCAandFisher*100)
 hold on
-errorbar(mean_variance_onlyPCA,std_variance_onlyPCA,'.','linewidth',2)
+errorbar(mean_variance_onlyPCA*100,std_variance_onlyPCA*100,'.','linewidth',2)
 hold on
-errorbar(mean_variance_PCAandFisher,std_variance_PCAandFisher,'.','linewidth',2)
+errorbar(mean_variance_PCAandFisher*100,std_variance_PCAandFisher*100,'.','linewidth',2)
 hold on
-plot([1:21],ones(1,21)*0.9,'linewidth',2)
+plot([0:140],ones(1,141)*90,'linewidth',2)
 grid on
+ylim([0 100])
 title({'Cumulated explained variance in';'function of the principal components'})
 ax=gca;
 ax.TitleFontSizeMultiplier=2;
