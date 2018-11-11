@@ -3,10 +3,16 @@ function [] = Final(trainData,trainLabels,testData)
 
 Inner = 5; 
 Outer = 10; 
-numMaxPCs = 100;
+numMaxPCs = 9; %20
 stp = 10; %first try was 20
 
-trainData_NCV = trainData(:,2:stp:end);
+%trainData_NCV = trainData(:,2:stp:end);
+trainData_reduced = trainData(:,1:200:end);
+trainData_NCV = [];
+
+for i = 1:size(trainData_reduced,1)
+    trainData_NCV=[trainData_NCV;smooth(trainData_reduced(i,:))'];
+end
 
 outerPartition = cvpartition(trainLabels,'kfold', Outer);
     
@@ -19,7 +25,7 @@ for k=1:Outer
     for w=1:Inner
         [inner_training, inner_test, inner_training_labels, inner_test_labels] = ...
             find_cvpartition(w,innerPartition,outer_training_labels,outer_training);
-         
+        
         norm_train = zscore(inner_training);
         [coeff,score,~,~,~] = pca(norm_train);
         norm_test = (inner_test - mean(inner_training,1))./std(inner_training,0,1);
@@ -107,23 +113,28 @@ title('Class error, 10-fold partition')
 
 %% CV for hyperparameters selection
 
-numMaxFolds = 5; 
-numMaxPCs = 100;
+numMaxFolds = 10; 
+numMaxPCs = 10;
 
-trainData_CV = trainData(:,1:stp:end);
+%trainData_CV = trainData(:,1:stp:end);
+trainData_CV = trainData(:,700:2:1000);
 
 cpLabels = cvpartition(trainLabels,'kfold', numMaxFolds);
+
+cumul_variance = [];
 
 for k=1:numMaxFolds    
     [training_set,test_set,training_labels,test_labels] = ...
         find_cvpartition(k, cpLabels, trainLabels, trainData_CV);
     
     norm_train = zscore(training_set);  
-    [coeff,score,~,~,~] = pca(norm_train);
+    [coeff,score,~,~,variance] = pca(norm_train);
     norm_test = (test_set - mean(training_set,1))./std(training_set,0,1);
     norm_score_test = norm_test*coeff;
     
     [orderedInd, ~] = rankfeat(score, training_labels, 'fisher');
+    
+    cumul_variance = [cumul_variance,cumsum(variance)/sum(variance)];
     
     for p=1:numMaxPCs
         
@@ -159,6 +170,12 @@ mean_train_error_QDA = mean(class_error_train_QDA, 2);
 % find the best number of PCs and the best classifier type
 [Results.CV.final_optimalValidationError,Results.CV.model] = min(optimalValidationError_CV);
 Results.CV.bPcNumb = bestPcNumber_CV(1,Results.CV.model);
+
+figure()
+bar(cumul_variance(:,1))
+title({'Cumulated explained variance in';'function of the principal components'})
+xlabel('Number of principal components')
+ylabel('Cumulated explained variance (%)')
 
 %% Model building 
 
