@@ -108,14 +108,18 @@ title('Class error, 10-fold partition')
 %% CV for hyperparameters selection
 
 numMaxFolds = 5; 
-numMaxPCs = 40;
+numMaxPCs = 20;
 stp = 20;
 
+load('s.mat');
+
 %trainData_CV = trainData(:,1:stp:end);
-trainData_CV = trainData(:,700:2:1500);
+trainData_CV = trainData(:,700:720);
+rng(s);
 
 cpLabels = cvpartition(trainLabels,'kfold', numMaxFolds);
 
+cumul_variance_one = [];
 cumul_variance = [];
 
 for k=1:numMaxFolds    
@@ -127,9 +131,11 @@ for k=1:numMaxFolds
     norm_test = (test_set - mean(training_set,1))./std(training_set,0,1);
     norm_score_test = norm_test*coeff;
     
+    cumul_variance_one = [cumul_variance_one,cumsum(variance)/sum(variance)];
+    
     [orderedInd, ~] = rankfeat(score, training_labels, 'fisher');
     
-    cumul_variance = [cumul_variance,cumsum(variance)/sum(variance)];
+    cumul_variance = [cumul_variance,cumsum(variance(orderedInd(1:end)))/sum(variance(orderedInd(1:end)))];
     
     for p=1:numMaxPCs
         
@@ -181,11 +187,30 @@ std_train_error_QDA = std(class_error_train_QDA,0, 2);
 [Results.CV.final_optimalValidationError,Results.CV.model] = min(optimalValidationError_CV);
 Results.CV.bPcNumb = bestPcNumber_CV(1,Results.CV.model);
 
+
+mean_variance_one = mean(cumul_variance_one,2);
+std_variance_one =std(cumul_variance_one,0,2);
+
+mean_variance = mean(cumul_variance,2);
+std_variance =std(cumul_variance,0,2);
+
+
 figure()
-bar(cumul_variance(:,1))
+bar(mean_variance_one)
+hold on
+errorbar(mean_variance_one,std_variance_one,'.')
+hold on
+bar(mean_variance)
+hold on
+errorbar(mean_variance,std_variance,'.')
+hold on
+plot([1:21],ones(1,21)*0.9,'linewidth',2)
+grid on
 title({'Cumulated explained variance in';'function of the principal components'})
+legend('PCA','PCA+Fisher')
 xlabel('Number of principal components')
 ylabel('Cumulated explained variance (%)')
+
 
 figure('name','Validation error and Training error Diaglinear')
 errorbar(mean_Validation_error_Diaglin,std_Validation_error_Diaglin, 'linewidth',2)
