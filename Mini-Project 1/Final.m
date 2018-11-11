@@ -3,16 +3,10 @@ function [] = Final(trainData,trainLabels,testData)
 
 Inner = 5; 
 Outer = 10; 
-numMaxPCs = 9; %20
+numMaxPCs = 20; 
 stp = 10; %first try was 20
 
-%trainData_NCV = trainData(:,2:stp:end);
-trainData_reduced = trainData(:,1:200:end);
-trainData_NCV = [];
-
-for i = 1:size(trainData_reduced,1)
-    trainData_NCV=[trainData_NCV;smooth(trainData_reduced(i,:))'];
-end
+trainData_NCV = trainData(:,1:stp:end);
 
 outerPartition = cvpartition(trainLabels,'kfold', Outer);
     
@@ -31,13 +25,13 @@ for k=1:Outer
         norm_test = (inner_test - mean(inner_training,1))./std(inner_training,0,1);
         norm_score_test = norm_test*coeff;
 
-        [orderedInd, ~] = rankfeat(score, inner_training_labels, 'fisher');
+       [orderedInd, ~] = rankfeat(score, inner_training_labels, 'fisher');
 
         for p=1:numMaxPCs
             
             ErrorsArray = ...
                 arrayErrorsClass(score(:,orderedInd(1:p)), norm_score_test(:,orderedInd(1:p)), inner_training_labels, inner_test_labels);
-        
+                
             Results.NCV.class_error_train_Diaglin(p,w) = ErrorsArray(1,1);
             Results.NCV.class_error_test_Diaglin(p,w) = ErrorsArray(1,2);
             Results.NCV.class_error_train_LDA(p,w) = ErrorsArray(2,1);
@@ -62,7 +56,7 @@ for k=1:Outer
     
     Results.NCV.mean_Validation_error_quad = mean(Results.NCV.class_error_test_QDA, 2);
     Results.NCV.mean_Train_error_quad = mean(Results.NCV.class_error_train_QDA,2);
-     
+    
     %mean_Train_error = [mean_Train_error_diaglin,mean_Train_error_LDA,mean_Train_error_diagquad,mean_Train_error_quad];
     
     [Results.NCV.optimalValidationError(k,1),Results.NCV.bestPcNumber(k,1)] = min(Results.NCV.mean_Validation_error_diaglin);
@@ -113,11 +107,12 @@ title('Class error, 10-fold partition')
 
 %% CV for hyperparameters selection
 
-numMaxFolds = 10; 
-numMaxPCs = 10;
+numMaxFolds = 5; 
+numMaxPCs = 40;
+stp = 20;
 
 %trainData_CV = trainData(:,1:stp:end);
-trainData_CV = trainData(:,700:2:1000);
+trainData_CV = trainData(:,700:2:1500);
 
 cpLabels = cvpartition(trainLabels,'kfold', numMaxFolds);
 
@@ -154,13 +149,28 @@ for k=1:numMaxFolds
 end
 
 mean_Validation_error_Diaglin = mean(class_error_test_Diaglin, 2);
+std_Validation_error_Diaglin = std(class_error_test_Diaglin,0,2);
+
 mean_Validation_error_LDA = mean(class_error_test_LDA, 2);
+std_Validation_error_LDA = std(class_error_test_LDA,0,2);
+
 mean_Validation_error_Diagquad = mean(class_error_test_Diagquad, 2);
+std_Validation_error_Diagquad = std(class_error_test_Diagquad,0,2);
+
 mean_Validation_error_QDA = mean(class_error_test_QDA, 2);
+std_Validation_error_QDA = std(class_error_test_QDA,0,2);
+
 mean_train_error_Diaglin = mean(class_error_train_Diaglin, 2);
+std_train_error_Diaglin = std(class_error_train_Diaglin,0,2);
+
 mean_train_error_LDA = mean(class_error_train_LDA, 2);
+std_train_error_LDA = std(class_error_train_LDA,0, 2);
+
 mean_train_error_Diagquad = mean(class_error_train_Diagquad, 2);
+std_train_error_Diagquad = std(class_error_train_Diagquad,0, 2);
+
 mean_train_error_QDA = mean(class_error_train_QDA, 2);
+std_train_error_QDA = std(class_error_train_QDA,0, 2);
 
 [optimalValidationError_CV(1,1),bestPcNumber_CV(1,1)] = min(mean_Validation_error_Diaglin);
 [optimalValidationError_CV(1,2),bestPcNumber_CV(1,2)] = min(mean_Validation_error_LDA);
@@ -177,6 +187,58 @@ title({'Cumulated explained variance in';'function of the principal components'}
 xlabel('Number of principal components')
 ylabel('Cumulated explained variance (%)')
 
+figure('name','Validation error and Training error Diaglinear')
+errorbar(mean_Validation_error_Diaglin,std_Validation_error_Diaglin, 'linewidth',2)
+hold on 
+errorbar(mean_train_error_Diaglin,std_train_error_Diaglin, 'linewidth',2)
+grid on
+al=legend('Validation','Training')
+al.FontSize=18;
+title('Validation and Training Error Diaglinear Classifier')
+ax=gca;
+ax.TitleFontSizeMultiplier=2;
+xlabel('#PCs','fontsize',18)
+ylabel('Class Error','fontsize',18)
+
+figure('name','Validation error and Training error LDA')
+errorbar(mean_Validation_error_LDA,std_Validation_error_LDA, 'linewidth',2)
+hold on 
+errorbar(mean_train_error_LDA,std_train_error_LDA, 'linewidth',2)
+grid on
+al=legend('Validation','Training')
+al.FontSize=18;
+title('Validation and Training Error LDA Classifier')
+ax=gca;
+ax.TitleFontSizeMultiplier=2;
+xlabel('#PCs','fontsize',18)
+ylabel('Class Error','fontsize',18)
+
+figure('name','Validation error and Training error Diagquadratic')
+errorbar(mean_Validation_error_Diagquad,std_Validation_error_Diagquad, 'linewidth',2)
+hold on 
+errorbar(mean_train_error_Diagquad,std_train_error_Diagquad, 'linewidth',2)
+grid on
+al=legend('Validation','Training')
+al.FontSize=18;
+title('Validation and Training Error Diagquad Classifier')
+ax=gca;
+ax.TitleFontSizeMultiplier=2;
+xlabel('#PCs','fontsize',18)
+ylabel('Class Error','fontsize',18)
+
+figure('name','Validation error and Training error QDA')
+errorbar(mean_Validation_error_QDA,std_Validation_error_QDA, 'linewidth',2)
+hold on 
+errorbar(mean_train_error_QDA,std_train_error_QDA, 'linewidth',2)
+grid on
+al=legend('Validation','Training')
+al.FontSize=18;
+title('Validation and Training Error QDA Classifier')
+ax=gca;
+ax.TitleFontSizeMultiplier=2;
+xlabel('#PCs','fontsize',18)
+ylabel('Class Error','fontsize',18)
+
 %% Model building 
 
 if Results.CV.model == 1
@@ -185,11 +247,12 @@ elseif Results.CV.model == 2
     classifiertype = 'linear';
 elseif Results.CV.model == 3
     classifiertype = 'diagquadratic';
-elseif Result.CV.model == 4
+elseif Results.CV.model == 4
     classifiertype = 'pseudoquadratic';
 end
 
-trainData = trainData(:,1:stp:end);   
+stp=200;
+trainData = trainData(:,1:200:end);   
 final_norm_train = zscore(trainData);  
 [coeff,score,~,~,~] = pca(final_norm_train);
 final_norm_test = (testData(:,1:stp:end) - mean(trainData,1))./std(trainData,0,1);
@@ -197,8 +260,8 @@ final_norm_score_test = final_norm_test*coeff;
 
 [orderedInd, ~] = rankfeat(score, trainLabels, 'fisher');
 
-Results.CV.bPcNumb = 20;
-classifiertype = 'linear';
+%Results.CV.bPcNumb = 20;
+%classifiertype = 'linear';
 [classifierKaggle, ~, ~,~] = classification(score(:,orderedInd(1:Results.CV.bPcNumb)),trainLabels,classifiertype,'uniform');
 yhat_kaggle = predict(classifierKaggle,final_norm_score_test(:,orderedInd(1:Results.CV.bPcNumb)));
 labelToCSV(yhat_kaggle,'labels_final.csv','csvlabels');
