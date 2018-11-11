@@ -1,9 +1,5 @@
 function [] = GuidesheetIV(trainData,trainLabels,testData)
 
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
-
-
 [orderedInd, orderedPower] = rankfeat(trainData, trainLabels, 'fisher');
 
 %standardized (z-score) data

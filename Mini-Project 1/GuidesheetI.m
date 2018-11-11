@@ -37,6 +37,16 @@ for subplotNumber = 1:10
     title(int2str(715+subplotNumber))
 end
 
+figure('name','feature 716')
+histogram(classA(:,716),[0:0.1:1]);
+hold on
+histogram(classB(:,716),[0:0.1:1]);
+title('Feature 716');
+ax=gca;
+ax.TitleFontSizeMultiplier=2;
+xlabel('Amplitude [\muV]','fontsize',18)
+ylabel('Number of samples','fontsize',18)
+
 %% Boxplot
 featureDifferent = 1095;
 featureSimilar = 723;
