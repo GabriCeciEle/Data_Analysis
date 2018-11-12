@@ -38,14 +38,32 @@ for subplotNumber = 1:10
 end
 
 figure('name','feature 716')
-histogram(classA(:,716),[0:0.1:1]);
+h1 = histogram(classA(:,716),[0:0.1:1],'Normalization','pdf');
+h1.FaceColor = [1 0 0];
 hold on
-histogram(classB(:,716),[0:0.1:1]);
+h2 = histogram(classB(:,716),[0:0.1:1],'Normalization','pdf');
+h2.FaceColor = [0 0 1];
+% h1.Normalization = 'probability';
+% h1.BinWidth = 0.08;
+% h2.Normalization = 'probability';
+% h2.BinWidth = 0.08;
+hold on
+y = 0:0.001:1;
+mu1 = mean(classA(:,716));
+sigma1 = std(classA(:,716));
+f1 = exp(-(y-mu1).^2./(2*sigma1^2))./(sigma1*sqrt(2*pi));
+mu2 = mean(classB(:,716));
+sigma2 = std(classB(:,716));
+f2 = exp(-(y-mu2).^2./(2*sigma2^2))./(sigma2*sqrt(2*pi));
+plot(y,f1,'color',[1 0 0],'LineWidth',1.5)
+hold on
+plot(y,f2,'color',[0 0 1],'LineWidth',1.5)
 title('Feature 716');
 ax=gca;
 ax.TitleFontSizeMultiplier=2;
 xlabel('Amplitude [\muV]','fontsize',18)
 ylabel('Number of samples','fontsize',18)
+legend('class A','class B')
 
 %% Boxplot
 featureDifferent = 1095;

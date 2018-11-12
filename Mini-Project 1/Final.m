@@ -3,11 +3,12 @@ function [] = Final(trainData,trainLabels,testData)
 Inner = 5; %NCV
 Outer = 10; %NCV
 numMaxFolds = 10; %CV
-numMaxPCs = 20; 
+numMaxPCs = 32; 
 stp=10;
 
-trainData_NCV = trainData(:,700:stp:2000);
-trainData_CV = trainData(:,700:stp:2000);
+trainData_NCV = trainData(:,[1:100:end,710:720]);
+trainData_CV = trainData(:,[1:100:end,710:720]);
+trainData_final = trainData(:,[1:100:end,710:720]);
 
 load('s.mat')
 
@@ -101,11 +102,21 @@ bar(Results.NCV.mean_class_error_outer_test)
 hold on
 errorbar(Results.NCV.mean_class_error_outer_test,Results.NCV.std_class_error_outer_test,'.','linewidth',2)
 grid on
-title('Class error on the Validation Set')
+title('Class error across Outer Folds')
 ax=gca;
 ax.TitleFontSizeMultiplier=2;
 ylabel('Class error','fontsize',18)
 xlabel('')
+
+figure('name','boxplot of error across outer folds')
+boxplot(Results.NCV.class_error_outer_test)
+title('Class Error across Outer Folds')
+ax=gca;
+ax.TitleFontSizeMultiplier=2;
+ylabel('Class error','fontsize',18)
+xlabel('All Outer Folds','fontsize',18)
+
+
 
 %% Statistical significance
 
@@ -202,10 +213,11 @@ errorbar(mean_variance_onlyPCA*100,std_variance_onlyPCA*100,'.','linewidth',2)
 hold on
 errorbar(mean_variance_PCAandFisher*100,std_variance_PCAandFisher*100,'.','linewidth',2)
 hold on
-plot([0:140],ones(1,141)*90,'linewidth',2)
+plot([0:35],ones(1,36)*90,'--','linewidth',2)
 grid on
-ylim([0 100])
-title({'Cumulated explained variance in';'function of the principal components'})
+ylim([0 101])
+xlim([0 33])
+title({'Cumulated explained variance as function of the principal components'})
 ax=gca;
 ax.TitleFontSizeMultiplier=2;
 al=legend('PCA','PCA+Fisher')
@@ -278,11 +290,10 @@ elseif Results.CV.model == 3
 elseif Results.CV.model == 4
     classifiertype = 'pseudoquadratic';
 end
-
-trainData_final = trainData(:,700:stp:2000);   
+   
 final_norm_train = zscore(trainData_final);  
 [coeff,score,~,~,~] = pca(final_norm_train);
-final_norm_test = (testData(:,700:stp:2000) - mean(trainData_final,1))./std(trainData_final,0,1);
+final_norm_test = (testData(:,[1:100:end,710:720]) - mean(trainData_final,1))./std(trainData_final,0,1);
 final_norm_score_test = final_norm_test*coeff;
 
 [orderedInd, ~] = rankfeat(score, trainLabels, 'fisher');
