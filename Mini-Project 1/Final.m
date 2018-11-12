@@ -112,10 +112,9 @@ figure('name','boxplot of error across outer folds')
 boxplot(Results.NCV.class_error_outer_test)
 title('Class Error across Outer Folds')
 ax=gca;
-ax.TitleFontSizeMultiplier=2;
-ylabel('Class error','fontsize',18)
-xlabel('All Outer Folds','fontsize',18)
-
+ax.FontSize = 18
+ylabel('Class error','fontsize',24)
+xlabel('All Outer Folds','fontsize',24)
 
 
 %% Statistical significance
@@ -228,52 +227,52 @@ ylabel('Cumulated Explained Variance (%)','fontsize',18)
 
 % Validation and Training Error
 figure('name','Validation error and Training error Diaglinear')
-errorbar(mean_Validation_error_Diaglin,std_Validation_error_Diaglin, 'linewidth',2)
-hold on 
 errorbar(mean_train_error_Diaglin,std_train_error_Diaglin, 'linewidth',2)
+hold on
+errorbar(mean_Validation_error_Diaglin,std_Validation_error_Diaglin, 'linewidth',2)
 grid on
-al=legend('Validation','Training')
+al=legend('Training','Validation')
 al.FontSize=18;
-title('Validation and Training Error Diaglinear Classifier')
+title('Training and Validation Error Diaglinear Classifier')
 ax=gca;
 ax.TitleFontSizeMultiplier=2;
 xlabel('#PCs','fontsize',18)
 ylabel('Class Error','fontsize',18)
 
-figure('name','Validation error and Training error LDA')
-errorbar(mean_Validation_error_LDA,std_Validation_error_LDA, 'linewidth',2)
-hold on 
+figure('name','Training and Validation Error error LDA')
 errorbar(mean_train_error_LDA,std_train_error_LDA, 'linewidth',2)
+hold on
+errorbar(mean_Validation_error_LDA,std_Validation_error_LDA, 'linewidth',2)
 grid on
-al=legend('Validation','Training')
+al=legend('Training','Validation')
 al.FontSize=18;
-title('Validation and Training Error LDA Classifier')
+title('Training and Validation Error LDA Classifier')
 ax=gca;
 ax.TitleFontSizeMultiplier=2;
 xlabel('#PCs','fontsize',18)
 ylabel('Class Error','fontsize',18)
 
-figure('name','Validation error and Training error Diagquadratic')
-errorbar(mean_Validation_error_Diagquad,std_Validation_error_Diagquad, 'linewidth',2)
-hold on 
+figure('name','Training and Validation Error Diagquadratic')
 errorbar(mean_train_error_Diagquad,std_train_error_Diagquad, 'linewidth',2)
+hold on
+errorbar(mean_Validation_error_Diagquad,std_Validation_error_Diagquad, 'linewidth',2)
 grid on
-al=legend('Validation','Training')
+al=legend('Training','Validation')
 al.FontSize=18;
-title('Validation and Training Error Diagquad Classifier')
+title('Training and Validation Error Diagquad Classifier')
 ax=gca;
 ax.TitleFontSizeMultiplier=2;
 xlabel('#PCs','fontsize',18)
 ylabel('Class Error','fontsize',18)
 
-figure('name','Validation error and Training error QDA')
-errorbar(mean_Validation_error_QDA,std_Validation_error_QDA, 'linewidth',2)
-hold on 
+figure('name','Training and Validation Error QDA')
 errorbar(mean_train_error_QDA,std_train_error_QDA, 'linewidth',2)
+hold on
+errorbar(mean_Validation_error_QDA,std_Validation_error_QDA, 'linewidth',2)
 grid on
-al=legend('Validation','Training')
+al=legend('Training','Validation')
 al.FontSize=18;
-title('Validation and Training Error QDA Classifier')
+title('Training and Validation Error QDA Classifier')
 ax=gca;
 ax.TitleFontSizeMultiplier=2;
 xlabel('#PCs','fontsize',18)
