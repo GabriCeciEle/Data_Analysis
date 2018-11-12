@@ -10,11 +10,11 @@ trainData_NCV = trainData(:,[1:100:end,710:720]);
 trainData_CV = trainData(:,[1:100:end,710:720]);
 trainData_final = trainData(:,[1:100:end,710:720]);
 
-load('s.mat')
+load('seed5.mat')
 
 %% NCV
 
-rng(s);
+rng(seed5);
 outerPartition = cvpartition(trainLabels,'kfold', Outer);
     
 for k=1:Outer
@@ -123,7 +123,7 @@ xlabel('All Outer Folds','fontsize',24)
 
 %% CV for hyperparameters selection
 
-rng(s);
+rng(seed5);
 cpLabels = cvpartition(trainLabels,'kfold', numMaxFolds);
 
 cumul_variance_onlyPCA = [];

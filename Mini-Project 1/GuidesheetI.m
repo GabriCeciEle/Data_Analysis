@@ -37,11 +37,11 @@ for subplotNumber = 1:10
     title(int2str(715+subplotNumber))
 end
 
-figure('name','feature 716')
-h1 = histogram(classA(:,716),[0:0.1:1],'Normalization','pdf');
+figure('name','feature 711')
+h1 = histogram(classA(:,711),[0:0.1:1],'Normalization','pdf');
 h1.FaceColor = [1 0 0];
 hold on
-h2 = histogram(classB(:,716),[0:0.1:1],'Normalization','pdf');
+h2 = histogram(classB(:,711),[0:0.1:1],'Normalization','pdf');
 h2.FaceColor = [0 0 1];
 % h1.Normalization = 'probability';
 % h1.BinWidth = 0.08;
@@ -49,16 +49,16 @@ h2.FaceColor = [0 0 1];
 % h2.BinWidth = 0.08;
 hold on
 y = 0:0.001:1;
-mu1 = mean(classA(:,716));
-sigma1 = std(classA(:,716));
+mu1 = mean(classA(:,711));
+sigma1 = std(classA(:,711));
 f1 = exp(-(y-mu1).^2./(2*sigma1^2))./(sigma1*sqrt(2*pi));
-mu2 = mean(classB(:,716));
-sigma2 = std(classB(:,716));
+mu2 = mean(classB(:,711));
+sigma2 = std(classB(:,711));
 f2 = exp(-(y-mu2).^2./(2*sigma2^2))./(sigma2*sqrt(2*pi));
 plot(y,f1,'color',[1 0 0],'LineWidth',1.5)
 hold on
 plot(y,f2,'color',[0 0 1],'LineWidth',1.5)
-title('Feature 716');
+title('Feature 711');
 ax=gca;
 ax.TitleFontSizeMultiplier=2;
 xlabel('Amplitude [\muV]','fontsize',18)
