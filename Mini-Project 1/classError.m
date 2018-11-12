@@ -7,6 +7,7 @@ function [ err ] = classError( y,yhat )
 %
 %   output:
 %       err:    the class-averaged classification error
+
 classes = unique(y);
 err_ = zeros(1,length(classes));
 

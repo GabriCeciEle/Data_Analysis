@@ -9,7 +9,8 @@ load('trainLabels.mat');
 
 %% Final 
 
-% Final
+Results = Final(trainData,trainLabels,testData);
+ModelBuilding(trainData,trainLabels,testData,'linear',17);
 
 %% Guidesheets 
 
@@ -21,7 +22,6 @@ GuidesheetIII(trainData,trainLabels,testData);
 
 GuidesheetIV(trainData,trainLabels,testData);
 
-% GuidesheetV();
 
 
 

@@ -1,5 +1,16 @@
 function [ErrorsArray] = arrayErrorsClass(trainingSet, testSet, trainingSet_labels, testSet_labels)
 
+% INPUT: training/test sets with their respective labels. 
+% OUTPUT: one matrix of errors using a uniform prior probability, where the number of row corresponds to 
+% the model, and the number of column to the training/testing. Both are 
+% 4x2 errors referring to different models.
+
+%                     TRAIN   |  TEST
+% diaglinear  -->    [        |     
+% linear      -->             |
+% diagquadratic-->            |
+% (pseudo)quadratic-->        |       ]
+
 % train a diaglinear classifier
 [classifierDiaglinear_train,  ~, ~, errDiaglinear_train] = ...
     classification(trainingSet, trainingSet_labels, 'diaglinear', 'uniform');

@@ -43,10 +43,6 @@ h1.FaceColor = [1 0 0];
 hold on
 h2 = histogram(classB(:,711),[0:0.1:1],'Normalization','pdf');
 h2.FaceColor = [0 0 1];
-% h1.Normalization = 'probability';
-% h1.BinWidth = 0.08;
-% h2.Normalization = 'probability';
-% h2.BinWidth = 0.08;
 hold on
 y = 0:0.001:1;
 mu1 = mean(classA(:,711));
