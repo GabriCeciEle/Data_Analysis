@@ -12,7 +12,7 @@ trainData = Data(1:rowsTrain,:);
 testData = Data(rowsTrain+1:end,:);
 
 [trainDataNorm,mu,sigma] = zscore(trainData);
-[coeff,trainDatascore,~,~,explained] = pca(trainDataNorm);
+[coeff,trainDatascore,latent, ~,explained] = pca(trainDataNorm);
 testDataNorm = (testData - mu)./sigma;
 testDatascore = testDataNorm*coeff;
 
