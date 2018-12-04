@@ -4,184 +4,102 @@ clc
 
 load ('Data.mat');
 
-%% Data splitting and PCA
+%% Data splitting and normalization
+train = 0.6; %0.05
+validation = 0.2; %0.65
 
-k = 0.7;
-rowsTrain = round(k*size(Data,1));
+rowsTrain = round(train*size(Data,1));
+rowsValidation = round(validation*size(Data,1));
+
+xtrain = PosX(1:rowsTrain);
+xvalidation = PosX(rowsTrain+1:rowsTrain+rowsValidation);
+xtest = PosX(rowsTrain+rowsValidation+1:end);
+xfulltrain = PosX(1:rowsTrain+rowsValidation);
+
+ytrain = PosY(1:rowsTrain);
+yvalidation = PosY(rowsTrain+1:rowsTrain+rowsValidation);
+ytest = PosY(rowsTrain+rowsValidation+1:end);
+yfulltrain = PosY(1:rowsTrain+rowsValidation);
+
+% Splitting
 trainData = Data(1:rowsTrain,:);
-testData = Data(rowsTrain+1:end,:);
+validationData = Data(rowsTrain+1:rowsTrain+rowsValidation,:);
+testData = Data(rowsTrain+rowsValidation+1:end,:);
+fullTrainData = Data(1:rowsTrain+rowsValidation,:);
 
-[trainDataNorm,mu,sigma] = zscore(trainData);
-[coeff,trainDatascore,latent, ~,explained] = pca(trainDataNorm);
-testDataNorm = (testData - mu)./sigma;
-testDatascore = testDataNorm*coeff;
+% Normalization
+[trainData, mu, sigma] = zscore(trainData);
+validationData = (validationData - mu)./sigma;
+[fullTrainData, mu, sigma] = zscore(fullTrainData);
+testData = (testData - mu)./sigma;
 
-cumulative = cumsum(explained)/sum(explained);
-index = find(cumulative>0.9,1);
+%% Lambda and Alpha 
+lambda = logspace(-10,0,15);
+Alpha = 0.1:0.1:1;
 
-%% Regressor Training
+%% Elastic Nets X
+Results.X = optimization(Alpha, lambda, xtrain, xvalidation, trainData, validationData);
+Results.Y = optimization(Alpha, lambda, ytrain, yvalidation, trainData, validationData);
 
-chosenFeatures = 1:index;
+%% Final Model Building
 
-xtrain = PosX(1:rowsTrain);
-xtest = PosX(rowsTrain+1:end);
-Ix_train = ones(size(xtrain,1),1);
-Ix_test = ones(size(xtest,1),1);
-FMx_train = trainDatascore(:,chosenFeatures);
-FMx_test = testDatascore(:,chosenFeatures);
-Xtrain = [Ix_train FMx_train];
-Xtest = [Ix_test FMx_test];
+% If Elastic Nets
+% [B_opt_final,FitInf_opt_final] = ...
+%     lasso(fullTrainData,xfulltrain,'Lambda',Results.ElasticNets.optimalLambda,'Alpha',Results.ElasticNets.optimalAlpha);
+% 
+% Xpredicted_opt_final = testData*B_opt_final + FitInf_opt_final.Intercept;
+% 
+% Results.ElasticNets.performance = immse(xtest,Xpredicted_opt_final);
 
-bx = regress(xtrain,Xtrain);
-trainErrX = immse(xtrain,Xtrain*bx);
-testErrX = immse(xtest,Xtest*bx);
-
-ytrain = PosY(1:rowsTrain);
-ytest = PosY(rowsTrain+1:end);
-Iy_train = ones(size(ytrain,1),1);
-Iy_test = ones(size(ytest,1),1);
-FMy_train = trainDatascore(:,chosenFeatures);
-FMy_test = testDatascore(:,chosenFeatures);
-Ytrain = [Iy_train FMy_train];
-Ytest = [Iy_test FMy_test];
-
-by = regress(ytrain,Ytrain);
-trainErrY = immse(ytrain,Ytrain*by);
-testErrY = immse(ytest,Ytest*by);
+% If PCA + Regression
 
 
-figure()
-subplot(2,2,1)
-plot(Xtrain*bx)
-hold on 
-plot(xtrain)
-legend('Regressed','PosX')
-title('Trainset')
+%% Figures Elastic Nets
+% figure('name','Non Zeros')
+% semilogx(lambda,Results.ElasticNets.nonZeros)
+% hold on
+% semilogx(Results.ElasticNets.optimalLambda,Results.ElasticNets.nonZeros(a_opt,find(Results.ElasticNets.optimalLambda==lambda)),'*')
+% grid on
+% xlabel('Lambda')
+% ylabel('#non zeros Beta Weights')
+% legend('0.1','0.2','0.3','0.4','0.5','0.6','0.7','0.8','0.9','1','Chosen Model')
+% 
+% figure('name','Validation and Training')
+% semilogx(lambda,Results.ElasticNets.validationErr(a_opt,:))
+% hold on 
+% semilogx(lambda, Results.ElasticNets.MSE_training(a_opt,:))
+% grid on 
+% xlabel('Lambda')
+% ylabel('MSE')
+% legend('Validation','Training')
+% 
+% figure('name','Validation')
+% semilogx(lambda,Results.ElasticNets.validationErrX)
+% hold on 
+% semilogx(Results.ElasticNets.optimalLambda,Results.ElasticNets.validationErrX(a_opt,find(Results.ElasticNets.optimalLambda==lambda)),'*')
+% grid on 
+% xlabel('Lambda')
+% ylabel('MSE')
+% legend('0.1','0.2','0.3','0.4','0.5','0.6','0.7','0.8','0.9','1','Chosen Model')
+% 
+%% Figures PCA + Regression
+% figure()
+% subplot(2,1,1)
+% plot(trainErrX)
+% hold on 
+% plot(validationErrX)
+% legend('Train','Test')
+% title('PosX first order')
+% 
+% subplot(2,1,2)
+% plot(trainErrX_second)
+% hold on 
+% plot(validationErrX_second)
+% legend('Train','Test')
+% title('PosX second order')
+% 
 
-subplot(2,2,2)
-plot(Xtest*bx)
-hold on 
-plot(xtest)
-legend('Regressed','PosX')
-title('Testset')
-
-subplot(2,2,3)
-plot(Ytrain*by)
-hold on 
-plot(ytrain)
-legend('Regressed','PosY')
-title('Trainset')
-
-subplot(2,2,4)
-plot(Ytest*by)
-hold on 
-plot(ytest)
-legend('Regressed','PosY')
-title('Testset')
-
-
-Xtrain_second = [Ix_train FMx_train FMx_train.^2];
-Xtest_second = [Ix_test FMx_test FMx_test.^2];
-
-Ytrain_second = [Iy_train FMy_train FMy_train.^2];
-Ytest_second = [Iy_test FMy_test FMy_test.^2];
-
-bx_second = regress(xtrain,Xtrain_second);
-trainErrX_second = immse(xtrain,Xtrain_second*bx_second);
-testErrX_second = immse(xtest,Xtest_second*bx_second);
-
-by_second = regress(ytrain,Ytrain_second);
-trainErrY_second = immse(ytrain,Ytrain_second*by_second);
-testErrY_second = immse(ytest,Ytest_second*by_second);
-
-
-%% Features
-
-xaxis = 1:50:size(trainDatascore,2);
-
-xtrain = PosX(1:rowsTrain);
-xtest = PosX(rowsTrain+1:end);
-Ix_train = ones(size(xtrain,1),1);
-Ix_test = ones(size(xtest,1),1);
-
-ytrain = PosY(1:rowsTrain);
-ytest = PosY(rowsTrain+1:end);
-Iy_train = ones(size(ytrain,1),1);
-Iy_test = ones(size(ytest,1),1);
-
-trainErrX = [];
-trainErrY = [];
-trainErrX_second = [];
-trainErrY_second = [];
-
-testErrX = [];
-testErrY = [];
-testErrX_second = [];
-testErrY_second = [];
-
-
-for ind = 1:50:size(trainDatascore,2)
-    
-    FMx_train = trainDatascore(:,1:ind);
-    FMx_test = testDatascore(:,1:ind);
-    Xtrain = [Ix_train FMx_train];
-    Xtest = [Ix_test FMx_test];
-    Xtrain_second = [Ix_train FMx_train FMx_train.^2];
-    Xtest_second = [Ix_test FMx_test FMx_test.^2];
-
-    FMy_train = trainDatascore(:,1:ind);
-    FMy_test = testDatascore(:,1:ind);
-    Ytrain = [Iy_train FMy_train];
-    Ytest = [Iy_test FMy_test];
-    Ytrain_second = [Iy_train FMy_train FMy_train.^2];
-    Ytest_second = [Iy_test FMy_test FMy_test.^2];
-    
-    bx = regress(xtrain,Xtrain);
-    by = regress(ytrain,Ytrain);
-    bx_second = regress(xtrain,Xtrain_second);
-    by_second = regress(ytrain,Ytrain_second);
-    
-    trainErrX = [trainErrX, immse(xtrain,Xtrain*bx)];
-    testErrX = [testErrX, immse(xtest,Xtest*bx)];
-    trainErrY = [trainErrY,immse(ytrain,Ytrain*by)];
-    testErrY = [testErrY, immse(ytest,Ytest*by)];
-    
-    trainErrX_second = [trainErrX_second,immse(xtrain,Xtrain_second*bx_second)];
-    testErrX_second = [testErrX_second,immse(xtest,Xtest_second*bx_second)];
-    trainErrY_second = [trainErrY_second,immse(ytrain,Ytrain_second*by_second)];
-    testErrY_second = [testErrY_second,immse(ytest,Ytest_second*by_second)];
-    
-end
-
-figure()
-subplot(2,2,1)
-plot(xaxis,trainErrX)
-hold on 
-plot(xaxis,testErrX)
-legend('Train','Test')
-title('PosX first order')
-
-subplot(2,2,2)
-plot(xaxis,trainErrY)
-hold on 
-plot(xaxis,testErrY)
-legend('Train','Test')
-title('PosY first order')
-
-subplot(2,2,3)
-plot(xaxis,trainErrX_second)
-hold on 
-plot(xaxis,testErrX_second)
-legend('Train','Test')
-title('PosX second order')
-
-subplot(2,2,4)
-plot(xaxis,trainErrY_second)
-hold on 
-plot(xaxis,testErrY_second)
-legend('Train','Test')
-title('PosY second order')
-
-
+% figure with PosX and PosY in time and the obtained Xregressed and Y
+% regressed
 
 
