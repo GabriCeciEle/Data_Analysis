@@ -41,17 +41,39 @@ Alpha = 0.1:0.1:1;
 Results.X = optimization(Alpha, lambda, xtrain, xvalidation, trainData, validationData);
 Results.Y = optimization(Alpha, lambda, ytrain, yvalidation, trainData, validationData);
 
-%% Final Model Building
+%% Final Model Building X --------- to check absolutely, sleeping while doing it 
 
 % If Elastic Nets
-% [B_opt_final,FitInf_opt_final] = ...
-%     lasso(fullTrainData,xfulltrain,'Lambda',Results.ElasticNets.optimalLambda,'Alpha',Results.ElasticNets.optimalAlpha);
-% 
-% Xpredicted_opt_final = testData*B_opt_final + FitInf_opt_final.Intercept;
-% 
-% Results.ElasticNets.performance = immse(xtest,Xpredicted_opt_final);
+[B_final,FitInf_final] = ...
+    lasso(fullTrainData,xfulltrain,'Lambda',Results.X.ElasticNets.optimalLambda,'Alpha',Results.X.ElasticNets.optimalAlpha);
 
-% If PCA + Regression
+Xpredicted_final = testData*B_final + FitInf_final.Intercept;
+
+Results.X.ElasticNets.performance = immse(xtest,Xpredicted_final);
+
+% If PCA + Regression 1st order
+[coeff,fullTrainDatascore, ~, ~,explained] = pca(fullTrainData);
+testDatascore = testData*coeff;
+
+I_fullTrain = ones(size(xfulltrain,1),1);
+I_test = ones(size(xtest,1),1);
+FM_fulltrain = fullTrainDatascore(:,1:Results.X.PCAandRegression.numPCs_opt);
+FM_test = testDatascore(:,1:Results.X.PCAandRegression.numPCs_opt);
+fullTrain = [I_fullTrain FM_fulltrain];
+Test = [I_test FM_test];
+
+b = regress(xfulltrain,fullTrain);
+
+Results.X.PCAandRegression.performance_1order = immse(xtest,Test*b);
+
+FM_fulltrainSecond = fullTrainDatascore(:,1:Results.X.PCAandRegression.numPCs_optSecond);
+FM_testSecond = testDatascore(:,1:Results.X.PCAandRegression.numPCs_optSecond);
+fullTrainSecond = [I_fullTrain FM_fulltrainSecond FM_fulltrainSecond.^2];
+TestSecond = [I_test FM_testSecond FM_testSecond.^2];
+
+b_second = regress(xfulltrain,fullTrainSecond);
+
+Results.X.PCAandRegression.performance_2order = immse(xtest,TestSecond*b_second);
 
 
 %% Figures Elastic Nets
