@@ -14,69 +14,130 @@ rowsValidation = round(validation*size(Data,1));
 xtrain = PosX(1:rowsTrain);
 xvalidation = PosX(rowsTrain+1:rowsTrain+rowsValidation);
 xtest = PosX(rowsTrain+rowsValidation+1:end);
-xfulltrain = PosX(1:rowsTrain+rowsValidation);
 
 ytrain = PosY(1:rowsTrain);
 yvalidation = PosY(rowsTrain+1:rowsTrain+rowsValidation);
 ytest = PosY(rowsTrain+rowsValidation+1:end);
-yfulltrain = PosY(1:rowsTrain+rowsValidation);
 
 % Splitting
 trainData = Data(1:rowsTrain,:);
 validationData = Data(rowsTrain+1:rowsTrain+rowsValidation,:);
 testData = Data(rowsTrain+rowsValidation+1:end,:);
-fullTrainData = Data(1:rowsTrain+rowsValidation,:);
 
 % Normalization
 [trainData, mu, sigma] = zscore(trainData);
 validationData = (validationData - mu)./sigma;
-[fullTrainData, mu, sigma] = zscore(fullTrainData);
 testData = (testData - mu)./sigma;
 
 %% Lambda and Alpha 
 lambda = logspace(-10,0,15);
-Alpha = 0.1:0.1:1;
+Alpha = logspace(-2,0,10); 
 
 %% Elastic Nets X
 Results.X = optimization(Alpha, lambda, xtrain, xvalidation, trainData, validationData);
 Results.Y = optimization(Alpha, lambda, ytrain, yvalidation, trainData, validationData);
 
-%% Final Model Building X --------- to check absolutely, sleeping while doing it 
+%% Final Model Building X
 
 % If Elastic Nets
 [B_final,FitInf_final] = ...
-    lasso(fullTrainData,xfulltrain,'Lambda',Results.X.ElasticNets.optimalLambda,'Alpha',Results.X.ElasticNets.optimalAlpha);
+    lasso(trainData,xtrain,'Lambda',Results.X.ElasticNets.optimalLambda,'Alpha',Results.X.ElasticNets.optimalAlpha);
 
 Xpredicted_final = testData*B_final + FitInf_final.Intercept;
 
-Results.X.ElasticNets.performance = immse(xtest,Xpredicted_final);
+Results.X.Finalperformance = immse(xtest,Xpredicted_final);
 
-% If PCA + Regression 1st order
-[coeff,fullTrainDatascore, ~, ~,explained] = pca(fullTrainData);
+
+%% Final Model Y
+
+[coeff,trainDatascore, ~, ~,explained] = pca(trainData);
 testDatascore = testData*coeff;
+cumulative = cumsum(explained)/sum(explained);
+Results.Explainedindex = find(cumulative>=0.9,1);
 
-I_fullTrain = ones(size(xfulltrain,1),1);
+I_train = ones(size(xtrain,1),1);
 I_test = ones(size(xtest,1),1);
-FM_fulltrain = fullTrainDatascore(:,1:Results.X.PCAandRegression.numPCs_opt);
-FM_test = testDatascore(:,1:Results.X.PCAandRegression.numPCs_opt);
-fullTrain = [I_fullTrain FM_fulltrain];
-Test = [I_test FM_test];
+FM_trainSecond = trainDatascore(:,1:Results.Y.PCAandRegression.numPCs_optSecond);
+FM_testSecond = testDatascore(:,1:Results.Y.PCAandRegression.numPCs_optSecond);
+trainSecond = [I_train FM_trainSecond FM_trainSecond.^2];
+testSecond = [I_test FM_testSecond FM_testSecond.^2];
 
-b = regress(xfulltrain,fullTrain);
+b_second = regress(ytrain,trainSecond);
+Ypredicted_final = testSecond*b_second;
 
-Results.X.PCAandRegression.performance_1order = immse(xtest,Test*b);
+Results.Y.Finalperformance_2order = immse(ytest,Ypredicted_final);
 
-FM_fulltrainSecond = fullTrainDatascore(:,1:Results.X.PCAandRegression.numPCs_optSecond);
-FM_testSecond = testDatascore(:,1:Results.X.PCAandRegression.numPCs_optSecond);
-fullTrainSecond = [I_fullTrain FM_fulltrainSecond FM_fulltrainSecond.^2];
-TestSecond = [I_test FM_testSecond FM_testSecond.^2];
+%% Figures
 
-b_second = regress(xfulltrain,fullTrainSecond);
+figure('name','different methods X')
+methods = categorical({'Linear Regressor 1st order';'Linear Regressor 2nd order';'Elastic Net'});
+subplot(1,2,1)
+bar(methods,[Results.X.PCAandRegression.trainErr_opt Results.X.PCAandRegression.validationErr_opt;
+    Results.X.PCAandRegression.trainErr_optSecond Results.X.PCAandRegression.validationErr_optSecond;
+    Results.X.ElasticNets.trainErr Results.X.ElasticNets.validationErr]);
+ylabel('MSE')
+legend ('Train Error','Validation Error')
+title('PosX')
 
-Results.X.PCAandRegression.performance_2order = immse(xtest,TestSecond*b_second);
+subplot(1,2,2)
+bar(methods,[Results.Y.PCAandRegression.trainErr_opt Results.Y.PCAandRegression.validationErr_opt;
+    Results.Y.PCAandRegression.trainErr_optSecond Results.Y.PCAandRegression.validationErr_optSecond;
+    Results.Y.ElasticNets.trainErr Results.Y.ElasticNets.validationErr]);
+ylabel('MSE')
+legend ('Train Error','Validation Error')
+title('PosY')
 
+figure('name','Train and Validation X')
+subplot(1,2,1)
+plot(Results.X.PCAandRegression.trainErr(1,:));
+hold on 
+plot(Results.X.PCAandRegression.validationErr(1,:))
+legend('Train','Validation')
+title('PosX first order')
 
-%% Figures Elastic Nets
+subplot(1,2,2)
+plot(Results.X.PCAandRegression.trainErr(2,:))
+hold on 
+plot(Results.X.PCAandRegression.validationErr(2,:))
+legend('Train','Validation')
+title('PosX second order')
+
+figure('name','Train and Validation Y')
+subplot(1,2,1)
+plot(Results.Y.PCAandRegression.trainErr(1,:));
+hold on 
+plot(Results.Y.PCAandRegression.validationErr(1,:))
+legend('Train','Validation')
+title('PosY first order')
+
+subplot(1,2,2)
+plot(Results.Y.PCAandRegression.trainErr(2,:))
+hold on 
+plot(Results.Y.PCAandRegression.validationErr(2,:))
+legend('Train','Validation')
+title('PosY second order')
+
+figure('name','Predicted Movements X')
+plot(xtest)
+hold on
+plot(Xpredicted_final)
+title('predicted X')
+legend('true','predicted')
+
+figure('name','Predicted Movements Y')
+plot(ytest)
+hold on
+plot(Ypredicted_final)
+title('predicted Y')
+legend('true','predicted')
+
+figure('name','Real trajectories')
+plot(xtest(400:425),ytest(400:425))
+hold on
+plot(Xpredicted_final(400:425),Ypredicted_final(400:425))
+title('Real Trajectories')
+legend('true','predicted')
+
 % figure('name','Non Zeros')
 % semilogx(lambda,Results.ElasticNets.nonZeros)
 % hold on

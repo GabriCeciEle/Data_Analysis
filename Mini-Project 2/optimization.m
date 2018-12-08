@@ -21,6 +21,8 @@ end
 [Results.ElasticNets.validationErr,a_opt] = min(M_opt);
 Results.ElasticNets.optimalAlpha = Alpha(a_opt);
 Results.ElasticNets.optimalLambda = lambda_opt(a_opt);
+Results.ElasticNets.trainErr = Results.ElasticNets.MSE_training(a_opt,find(lambda==lambda_opt(a_opt)));
+
 
 %% PCA + Regression
 [coeff,trainDatascore, ~, ~,explained] = pca(trainData);
@@ -37,7 +39,7 @@ trainErr_second = [];
 validationErr = [];
 validationErr_second = [];
 
-for ind = 1:150%size(trainDatascore,2)
+for ind = 1:100 %size(trainDatascore,2)
     
     FM_train = trainDatascore(:,1:ind);
     FM_validation = validationDatascore(:,1:ind);
@@ -57,9 +59,13 @@ for ind = 1:150%size(trainDatascore,2)
     
 end
 
+
 Results.PCAandRegression.validationErr = [validationErr;validationErr_second];
+Results.PCAandRegression.trainErr = [trainErr;trainErr_second];
 [Results.PCAandRegression.validationErr_opt, Results.PCAandRegression.numPCs_opt]= min(validationErr);
 [Results.PCAandRegression.validationErr_optSecond, Results.PCAandRegression.numPCs_optSecond]= min(validationErr_second);
+Results.PCAandRegression.trainErr_opt = trainErr(Results.PCAandRegression.numPCs_opt);
+Results.PCAandRegression.trainErr_optSecond = trainErr_second(Results.PCAandRegression.numPCs_optSecond);
 
 end
 
