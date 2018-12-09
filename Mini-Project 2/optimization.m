@@ -8,13 +8,13 @@ for alpha_= 1:length(Alpha)
     Regressed = validationData*B + FitInf.Intercept;
     
     for lambda_= 1:size(lambda,2)
-        Results.ElasticNets.validationErr(alpha_,lambda_) = immse(validation,Regressed(:,lambda_));
+        Results.ElasticNets.validationErrtot(alpha_,lambda_) = immse(validation,Regressed(:,lambda_));
     end
     
     Results.ElasticNets.nonZeros = [Results.ElasticNets.nonZeros;FitInf.DF];
     Results.ElasticNets.MSE_training = [Results.ElasticNets.MSE_training;FitInf.MSE];
     
-    [M_opt(1,alpha_),I_opt] = min(Results.ElasticNets.validationErr(alpha_,:));
+    [M_opt(1,alpha_),I_opt] = min(Results.ElasticNets.validationErrtot(alpha_,:));
     lambda_opt(1,alpha_) = lambda(I_opt);
 end
     
